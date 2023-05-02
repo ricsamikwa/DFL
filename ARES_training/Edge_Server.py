@@ -44,10 +44,15 @@ class Edge_Server(Wireless):
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 
-		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=True, transform=self.transform_test)
-		self.testloader = torch.utils.data.DataLoader(self.testset, batch_size=100, shuffle=False, num_workers=4)
+		#test dataset stuff
+
+# 		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+# ])
+# 		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=True, transform=self.transform_test)
+# 		self.testloader = torch.utils.data.DataLoader(self.testset, batch_size=100, shuffle=False, num_workers=4)
+
+		self.testloader = functions.get_test_dataloader_non_iid(4)
+
  		
 	def initialize(self, split_layers, offload, first, LR):
 		if offload or first:
@@ -143,7 +148,7 @@ class Edge_Server(Wireless):
 		logger.info(str(client_ip) + 'training end')
 		return 'Done'
 
-	def aggregate(self, client_ips):
+	def aggregate(self, client_ips,round):
 		w_local_list =[]
 		
 		for i in range(len(client_ips)):
@@ -162,17 +167,18 @@ class Edge_Server(Wireless):
 		init_temp_one = w_local_list[0]
 		init_temp_two = w_local_list[1]
 		# for phi in range(configurations.N):
-			
-		for p in self.uninet.cpu().state_dict():
-			print(p)
-			temp_one = init_temp_one[0][p]
-			temp_two = init_temp_two[0][p]
-			new_temp_one = temp_one.numpy().flatten()
-			new_temp_two = temp_two.numpy().flatten()
 
-			# print(new_temp_one)
-			cka_from_features = functions.model_similarity_cka(new_temp_one, new_temp_two)
-			print('Linear CKA from Features: {:.5f}'.format(cka_from_features))
+		if round == 0 or round == 99:	
+			for p in self.uninet.cpu().state_dict():
+				print(p)
+				temp_one = init_temp_one[0][p]
+				temp_two = init_temp_two[0][p]
+				new_temp_one = temp_one.numpy().flatten()
+				new_temp_two = temp_two.numpy().flatten()
+
+				# print(new_temp_one)
+				cka_from_features = functions.model_similarity_cka(new_temp_one, new_temp_two)
+				print('Linear CKA from Features: {:.5f}'.format(cka_from_features))
 
 		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
 		

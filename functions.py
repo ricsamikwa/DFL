@@ -71,6 +71,39 @@ def get_local_dataloader_non_iid(CLIENT_IDEX, cpu_count):
 		   'dog', 'frog', 'horse', 'ship', 'truck')
   return trainloader,classes
 
+
+
+def get_test_dataloader(cpu_count=4):
+	
+  transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+])
+  testset = torchvision.datasets.CIFAR10(root=dataset_path, train=False, download=True, transform=transform_test)
+  testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=cpu_count)
+
+  return testloader
+
+def get_test_dataloader_non_iid(cpu_count=4):
+	
+  testset = torchvision.datasets.CIFAR10(root=dataset_path, train=False, download=True)
+  classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
+  
+  x_test = testset.data
+  y_test = testset.targets
+
+  # Let's choose cats (class 3 of CIFAR) and dogs (class 5 of CIFAR) as trainset/testset
+  cat_dog_testset = \
+  DatasetMaker(
+        [get_class_i(x_test, y_test, classDict['deer']),
+        get_class_i(x_test, y_test, classDict['horse']),
+	      get_class_i(x_test, y_test, classDict['dog']),
+        get_class_i(x_test, y_test, classDict['cat'])],
+        transform_with_aug
+    )
+  trainloader = DataLoader(
+    cat_dog_testset, batch_size=B, shuffle=True, num_workers=cpu_count)
+
+  return trainloader
+
 def get_class_i(x, y, i):
     """
     x: trainset.train_data or testset.test_data

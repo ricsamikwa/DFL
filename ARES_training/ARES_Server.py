@@ -45,7 +45,7 @@ for r in range(configurations.R):
 
 	s_time = time.time()
 	bandwidth = Edge_Server.train(thread_number= configurations.K, client_ips= configurations.CLIENTS_LIST)
-	new_model = Edge_Server.aggregate(configurations.CLIENTS_LIST)
+	new_model = Edge_Server.aggregate(configurations.CLIENTS_LIST,r)
 	e_time = time.time()
 
 	# Recording each round training time, bandwidth and test accuracy

@@ -40,7 +40,7 @@ transform_with_aug = transforms.Compose([TPIL, RC, RHF, TT, NRM])
 # Transforms object for testset with NO augmentation
 transform_no_aug = transforms.Compose([TT, NRM])
 
-def get_local_dataloader(CLIENT_IDEX, cpu_count):
+def get_local_dataloader_non_iid(CLIENT_IDEX, cpu_count):
   indices = list(range(N))
   part_tr = indices[int(5000 * 0) : int(5000 * (0+1))]
 
@@ -125,26 +125,26 @@ class DatasetMaker(Dataset):
 
         return bin_index, index_wrt_class
 
-# def get_local_dataloader(CLIENT_IDEX, cpu_count):
-# 	indices = list(range(N))
-# 	part_tr = indices[int(5000 * 0) : int(5000 * (0+1))]
+def get_local_dataloader(CLIENT_IDEX, cpu_count):
+	indices = list(range(N))
+	part_tr = indices[int(5000 * 0) : int(5000 * (0+1))]
 
-# 	transform_train = transforms.Compose([
-# 	transforms.RandomCrop(32, padding=4),
-# 	transforms.RandomHorizontalFlip(),
-# 	transforms.ToTensor(),
-# 	transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-# ])
-# 	trainset = torchvision.datasets.CIFAR10(
-# 		root=dataset_path, train=True, download=True, transform=transform_train)
+	transform_train = transforms.Compose([
+	transforms.RandomCrop(32, padding=4),
+	transforms.RandomHorizontalFlip(),
+	transforms.ToTensor(),
+	transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+])
+	trainset = torchvision.datasets.CIFAR10(
+		root=dataset_path, train=True, download=True, transform=transform_train)
 	
-# 	subset = Subset(trainset, part_tr)
-# 	trainloader = DataLoader(
-# 		subset, batch_size=B, shuffle=False, num_workers=cpu_count)
+	subset = Subset(trainset, part_tr)
+	trainloader = DataLoader(
+		subset, batch_size=B, shuffle=False, num_workers=cpu_count)
 
-# 	classes = ('plane', 'car', 'bird', 'cat', 'deer',
-# 		   'dog', 'frog', 'horse', 'ship', 'truck')
-# 	return trainloader,classes
+	classes = ('plane', 'car', 'bird', 'cat', 'deer',
+		   'dog', 'frog', 'horse', 'ship', 'truck')
+	return trainloader,classes
 
 
 def recv_msg(sock, expect_msg_type=None):

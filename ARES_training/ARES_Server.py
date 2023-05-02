@@ -67,15 +67,15 @@ for r in range(configurations.R):
 		# config.split_layer = split_layers
 		split_layers = Edge_Server.adaptive_split(bandwidth)
 		splitlist = ''.join(str(e) for e in split_layers)
-		filename = 'ARES_split_'+splitlist+'_config_3_temp.csv'
+		filename = 'ARES_split_'+splitlist+'_config_fdl.csv'
 	else:
 		split_layers = configurations.split_layer
-		filename = 'classic_local_config_3_temp.csv'
+		filename = 'classic_local_fl.csv'
 
 
-	# with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:
-	# 	writer = csv.writer(file)
-	# 	writer.writerow([ trianing_time, test_acc])
+	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:
+		writer = csv.writer(file)
+		writer.writerow([ trianing_time, test_acc])
     
 	logger.info('Round Finish')
 	logger.info('==> Round Training Time: {:}'.format(trianing_time))

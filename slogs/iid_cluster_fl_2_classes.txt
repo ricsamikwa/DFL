@@ -1,0 +1,158 @@
+################################## 0
+features.0.weight
+Linear CKA from Features: 0.98872
+features.0.bias
+Linear CKA from Features: 0.00996
+features.1.weight
+Linear CKA from Features: 0.25971
+features.1.bias
+Linear CKA from Features: 0.18369
+features.1.running_mean
+Linear CKA from Features: 0.90056
+features.1.running_var
+Linear CKA from Features: 0.96065
+features.1.num_batches_tracked
+Linear CKA from Features: nan
+features.4.weight
+Linear CKA from Features: 0.99884
+features.4.bias
+Linear CKA from Features: 0.00392
+features.5.weight
+Linear CKA from Features: 0.72530
+features.5.bias
+Linear CKA from Features: 0.75606
+features.5.running_mean
+Linear CKA from Features: 0.97878
+features.5.running_var
+Linear CKA from Features: 0.71577
+features.5.num_batches_tracked
+Linear CKA from Features: nan
+features.8.weight
+Linear CKA from Features: 0.99965
+features.8.bias
+Linear CKA from Features: 0.00933
+features.9.weight
+Linear CKA from Features: 0.67950
+features.9.bias
+Linear CKA from Features: 0.68135
+features.9.running_mean
+Linear CKA from Features: 0.99070
+features.9.running_var
+Linear CKA from Features: 0.53340
+features.9.num_batches_tracked
+Linear CKA from Features: nan
+denses.0.weight
+Linear CKA from Features: 0.99315
+denses.0.bias
+Linear CKA from Features: 0.94243
+denses.1.weight
+Linear CKA from Features: 0.97560
+denses.1.bias
+Linear CKA from Features: 0.99668
+
+################################## 50
+
+features.0.weight
+Linear CKA from Features: 0.99627
+features.0.bias
+Linear CKA from Features: 0.93921
+features.1.weight
+Linear CKA from Features: 0.99520
+features.1.bias
+Linear CKA from Features: 0.99147
+features.1.running_mean
+Linear CKA from Features: 0.94041
+features.1.running_var
+Linear CKA from Features: 0.94789
+features.1.num_batches_tracked
+Linear CKA from Features: nan
+features.4.weight
+Linear CKA from Features: 0.99477
+features.4.bias
+Linear CKA from Features: 0.92438
+features.5.weight
+Linear CKA from Features: 0.98976
+features.5.bias
+Linear CKA from Features: 0.99378
+features.5.running_mean
+Linear CKA from Features: 0.97096
+features.5.running_var
+Linear CKA from Features: 0.88953
+features.5.num_batches_tracked
+Linear CKA from Features: nan
+features.8.weight
+Linear CKA from Features: 0.99738
+features.8.bias
+Linear CKA from Features: 0.88342
+features.9.weight
+Linear CKA from Features: 0.99524
+features.9.bias
+Linear CKA from Features: 0.99469
+features.9.running_mean
+Linear CKA from Features: 0.97643
+features.9.running_var
+Linear CKA from Features: 0.91529
+features.9.num_batches_tracked
+Linear CKA from Features: nan
+denses.0.weight
+Linear CKA from Features: 0.99633
+denses.0.bias
+Linear CKA from Features: 0.98288
+denses.1.weight
+Linear CKA from Features: 0.99850
+denses.1.bias
+Linear CKA from Features: 0.99988
+
+################################## 100
+features.0.weight
+Linear CKA from Features: 0.99987
+features.0.bias
+Linear CKA from Features: 0.99926
+features.1.weight
+Linear CKA from Features: 0.99988
+features.1.bias
+Linear CKA from Features: 0.99986
+features.1.running_mean
+Linear CKA from Features: 0.99459
+features.1.running_var
+Linear CKA from Features: 0.99729
+features.1.num_batches_tracked
+Linear CKA from Features: nan
+features.4.weight
+Linear CKA from Features: 0.99987
+features.4.bias
+Linear CKA from Features: 0.99883
+features.5.weight
+Linear CKA from Features: 0.99972
+features.5.bias
+Linear CKA from Features: 0.99982
+features.5.running_mean
+Linear CKA from Features: 0.99890
+features.5.running_var
+Linear CKA from Features: 0.99267
+features.5.num_batches_tracked
+Linear CKA from Features: nan
+features.8.weight
+Linear CKA from Features: 0.99992
+features.8.bias
+Linear CKA from Features: 0.99779
+features.9.weight
+Linear CKA from Features: 0.99983
+features.9.bias
+Linear CKA from Features: 0.99980
+features.9.running_mean
+Linear CKA from Features: 0.99912
+features.9.running_var
+Linear CKA from Features: 0.98862
+features.9.num_batches_tracked
+Linear CKA from Features: nan
+denses.0.weight
+Linear CKA from Features: 0.99991
+denses.0.bias
+Linear CKA from Features: 0.99935
+denses.1.weight
+Linear CKA from Features: 0.99998
+denses.1.bias
+Linear CKA from Features: 1.00000
+
+

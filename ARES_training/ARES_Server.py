@@ -70,7 +70,7 @@ for r in range(configurations.R):
 		filename = 'ARES_split_'+splitlist+'_config_fdl.csv'
 	else:
 		split_layers = configurations.split_layer
-		filename = 'classic_local_fl.csv'
+		filename = 'iid_cluster_fl_2_classes.csv'
 
 
 	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:

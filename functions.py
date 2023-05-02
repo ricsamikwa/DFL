@@ -93,9 +93,7 @@ def get_test_dataloader_non_iid(cpu_count=4):
   # Let's choose cats (class 3 of CIFAR) and dogs (class 5 of CIFAR) as trainset/testset
   cat_dog_testset = \
   DatasetMaker(
-        [get_class_i(x_test, y_test, classDict['deer']),
-        get_class_i(x_test, y_test, classDict['horse']),
-	      get_class_i(x_test, y_test, classDict['dog']),
+        [get_class_i(x_test, y_test, classDict['dog']),
         get_class_i(x_test, y_test, classDict['cat'])],
         transform_with_aug
     )

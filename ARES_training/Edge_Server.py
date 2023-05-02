@@ -168,7 +168,7 @@ class Edge_Server(Wireless):
 		init_temp_two = w_local_list[1]
 		# for phi in range(configurations.N):
 
-		if round == 0 or round == 99:	
+		if round == 0 or round ==50 or round == 99:	
 			for p in self.uninet.cpu().state_dict():
 				print(p)
 				temp_one = init_temp_one[0][p]

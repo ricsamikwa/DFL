@@ -46,7 +46,7 @@ class Edge_Server(Wireless):
 
 		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
-		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=False, transform=self.transform_test)
+		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=True, transform=self.transform_test)
 		self.testloader = torch.utils.data.DataLoader(self.testset, batch_size=100, shuffle=False, num_workers=4)
  		
 	def initialize(self, split_layers, offload, first, LR):

@@ -140,7 +140,7 @@ def get_local_dataloader(CLIENT_IDEX, cpu_count):
 	
 	subset = Subset(trainset, part_tr)
 	trainloader = DataLoader(
-		subset, batch_size=B, shuffle=False, num_workers=cpu_count)
+		subset, batch_size=B, shuffle=True, num_workers=cpu_count)
 
 	classes = ('plane', 'car', 'bird', 'cat', 'deer',
 		   'dog', 'frog', 'horse', 'ship', 'truck')

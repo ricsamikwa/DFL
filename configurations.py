@@ -7,7 +7,7 @@ SERVER_PORT = 43000
 
 # Dataset 
 dataset_name = 'CIFAR10'
-home = sys.path[0].split('RES-Things')[0] + 'RES-Things'
+home = sys.path[0].split('Fed-ARES')[0] + 'Fed-ARES'
 dataset_path = home +'/datasets/'+ dataset_name +'/'
 N = 50000 
 
@@ -51,8 +51,8 @@ random = True
 random_seed = 0
 
 
-K = 3 
+K = 2 
 
-HOST2IP = {'nano6':'192.168.1.42', 'nano8':'192.168.1.43','nano4':'192.168.1.40'}
-CLIENTS_CONFIG= { '192.168.1.42':0, '192.168.1.43':1,'192.168.1.40':2 }
-CLIENTS_LIST= [ '192.168.1.42', '192.168.1.43','192.168.1.40'] 
+HOST2IP = {'nano6':'192.168.1.42', 'nano8':'192.168.1.43'}
+CLIENTS_CONFIG= { '192.168.1.42':0, '192.168.1.43':1}
+CLIENTS_LIST= [ '192.168.1.42', '192.168.1.43'] 

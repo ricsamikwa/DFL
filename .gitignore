@@ -1,5 +1,7 @@
 ARES_trainingRES-Things/
+BenchmarkingRES-Things/
 datasets/
+data/
 __pycache__/
 *.py[cod]
 *$py.class

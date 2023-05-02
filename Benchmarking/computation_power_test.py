@@ -45,13 +45,14 @@ class Client(Wireless):
 		logger.debug('Receiving Weights..')
 
 	def train(self, trainloader):
-	
+
 		s_time_total = time.time()
 		time_training_c = 0
 		self.net.to(self.device)
 		self.net.train()
 		if self.split_layer == (configurations.model_len -1):
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader)):
+				# print(targets)
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
@@ -100,6 +101,7 @@ logger.info('Preparing Data.')
 # this has problems on mac OS
 cpu_count = multiprocessing.cpu_count()
 trainloader, classes= functions.get_local_dataloader(1, cpu_count)
+
 
 for r in range(configurations.R):
 	logger.info('====================================>')

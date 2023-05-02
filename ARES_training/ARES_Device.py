@@ -36,6 +36,7 @@ first = True # First initializaiton control
 client.initialize(split_layer, split, first, LR)
 first = False 
 
+
 logger.info('Preparing Data.')
 cpu_count = multiprocessing.cpu_count()
 trainloader, classes= functions.get_local_dataloader(index, cpu_count)

@@ -186,7 +186,10 @@ class Edge_Server(Wireless):
 		# print('Linear CKA from Features: {:.5f}'.format(cka_from_features))
 
 
+		#################################### this is the place where it is done !!!
 		self.uninet.load_state_dict(aggregrated_model)
+
+
 		return aggregrated_model
 
 	def test(self, r):

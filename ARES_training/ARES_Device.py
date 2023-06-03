@@ -39,7 +39,9 @@ first = False
 
 logger.info('Preparing Data.')
 cpu_count = multiprocessing.cpu_count()
-trainloader, classes= functions.get_local_dataloader(index, cpu_count)
+
+trainloader, classes= functions.get_local_dataloader_non_iid(index, cpu_count)
+# trainloader, classes= functions.get_local_dataloader(index, cpu_count)
 
 if split:
 	logger.info('ARES Training')
@@ -105,11 +107,11 @@ def training_thread(LR):
 		#     voltage = ((t.read()))
 		#     print(voltage)
 
-		
+		# NO SAVING DATA ON DEVICE 
 
-		with open(configurations.home + '/slogs/' + filename,'a', newline='') as file:
-			writer = csv.writer(file)
-			writer.writerow([network_speed,training_time_pr, training_time, average_time])
+		# with open(configurations.home + '/slogs/' + filename,'a', newline='') as file:
+		# 	writer = csv.writer(file)
+		# 	writer.writerow([network_speed,training_time_pr, training_time, average_time])
 
 		logger.info('ROUND: {} END'.format(r))
 		

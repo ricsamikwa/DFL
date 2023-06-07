@@ -166,19 +166,24 @@ class Edge_Server(Wireless):
 		# print(w_local_list[0])
 		init_temp_one = w_local_list[0]
 		init_temp_two = w_local_list[1]
+		init_temp_three = w_local_list[2]
 		# for phi in range(configurations.N):
 
 		if round == 0 or round ==50 or round == 99:	
 			for p in self.uninet.cpu().state_dict():
-				print(p)
+				# print(p)
 				temp_one = init_temp_one[0][p]
 				temp_two = init_temp_two[0][p]
+				temp_three = init_temp_three[0][p]
 				new_temp_one = temp_one.numpy().flatten()
 				new_temp_two = temp_two.numpy().flatten()
+				new_temp_three = temp_three.numpy().flatten()
 
 				# print(new_temp_one)
-				cka_from_features = functions.model_similarity_cka(new_temp_one, new_temp_two)
-				print('Linear CKA from Features: {:.5f}'.format(cka_from_features))
+				cka_from_features12 = functions.model_similarity_cka(new_temp_one, new_temp_two)
+				cka_from_features13 = functions.model_similarity_cka(new_temp_one, new_temp_three)
+				print('Linear CKA 12: {:.5f}'.format(cka_from_features12))
+				print('Linear CKA 13: {:.5f}'.format(cka_from_features13))
 
 		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
 		

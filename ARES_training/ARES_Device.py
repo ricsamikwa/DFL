@@ -33,7 +33,7 @@ client = Client(index, ip_address, configurations.SERVER_ADDR, configurations.SE
 
 split = args.split
 first = True # First initializaiton control
-client.initialize(split_layer, split, first, LR)
+client.initialize(split_layer, split, -1, first, LR)
 first = False 
 
 
@@ -128,7 +128,7 @@ def training_thread(LR):
 		if r > 49:
 			LR = configurations.LR * 0.1
 
-		client.reinitialize(configurations.split_layer[index], split, first, LR)
+		client.reinitialize(configurations.split_layer[index], split, r, first, LR)
 		e_time_rebuild = time.time()
 		logger.info('Rebuild time: ' + str(e_time_rebuild - s_time_rebuild))
 		logger.info('==> Reinitialization Finish')

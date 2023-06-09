@@ -43,7 +43,7 @@ class Edge_Server(Wireless):
 			self.client_socks[str(ip)] = client_sock
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
-
+		self.w_local_list =[]
 		#test dataset stuff
 
 # 		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -54,7 +54,7 @@ class Edge_Server(Wireless):
 		self.testloader = functions.get_test_dataloader_non_iid(4)
 
  		
-	def initialize(self, split_layers, offload, first, LR):
+	def initialize(self, split_layers, offload,round, first, LR):
 		if offload or first:
 			self.split_layers = split_layers
 			self.nets = {}
@@ -75,9 +75,19 @@ class Edge_Server(Wireless):
 					self.nets[client_ip] = functions.get_model('Server', self.model_name, split_layers[i], self.device, configurations.model_cfg)
 			self.criterion = nn.CrossEntropyLoss()
 
-		msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
+		
+			# here is where i continue 
+			# send the right model 
+			# keep ip address when receiving
+			# send the right model 
 		for i in self.client_socks:
-			self.send_msg(self.client_socks[i], msg)
+			if round > 0 and round < 10:
+				# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.w_local_list[i].state_dict()]
+				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
+				self.send_msg(self.client_socks[i], msg)
+			else:
+				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
+				self.send_msg(self.client_socks[i], msg)
 
 	def train(self, thread_number, client_ips):
 		# Network test
@@ -169,7 +179,7 @@ class Edge_Server(Wireless):
 		init_temp_three = w_local_list[2]
 		# for phi in range(configurations.N):
 
-		if round == 0 or round ==50 or round == 99:	
+		if round == 0 or round ==10 or round == 99:	
 			for p in self.uninet.cpu().state_dict():
 				# print(p)
 				temp_one = init_temp_one[0][p]
@@ -185,13 +195,13 @@ class Edge_Server(Wireless):
 				print('Linear CKA 12: {:.5f}'.format(cka_from_features12))
 				print('Linear CKA 13: {:.5f}'.format(cka_from_features13))
 
+		if round < 10:
+			self.w_local_list = w_local_list
+
+			return w_local_list
+
 		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
 		
-		# cka_from_features = functions.model_similarity_cka(aggregrated_model, aggregrated_model)
-		# print('Linear CKA from Features: {:.5f}'.format(cka_from_features))
-
-
-		#################################### this is the place where it is done !!!
 		self.uninet.load_state_dict(aggregrated_model)
 
 
@@ -230,7 +240,7 @@ class Edge_Server(Wireless):
 		offloading_strategy = benchClient.ARES_optimiser(0.6, bandwidth[configurations.CLIENTS_LIST[0]]) + 1
 		print("Current Strategy: "+ str(offloading_strategy))
 		# strategy configuration - refactoring
-		configurations.split_layer = [1,3,4,5,5]
+		configurations.split_layer = [1,3,4]
 		logger.info('Next Round : ' + str(configurations.split_layer))
 
 		msg = ['SPLIT_VECTOR',configurations.split_layer]
@@ -238,8 +248,8 @@ class Edge_Server(Wireless):
 		return configurations.split_layer
 
 
-	def reinitialize(self, split_layers, offload, first, LR):
-		self.initialize(split_layers, offload, first, LR)
+	def reinitialize(self, split_layers, offload,round, first, LR):
+		self.initialize(split_layers, offload,round, first, LR)
 
 	def scatter(self, msg):
 		for i in self.client_socks:

@@ -25,7 +25,7 @@ ip_address = '192.168.1.38'
 
 logger.info('Preparing Edge Server.')
 Edge_Server = Edge_Server(0, ip_address, configurations.SERVER_PORT, 'VGG')
-Edge_Server.initialize(configurations.split_layer, split, first, LR)
+Edge_Server.initialize(configurations.split_layer, split,-1, first, LR)
 first = False
 
 #if split:
@@ -89,6 +89,6 @@ for r in range(configurations.R):
 	if r > 49:
 		LR = configurations.LR * 0.1
 
-	Edge_Server.reinitialize(split_layers, split, first, LR)
+	Edge_Server.reinitialize(split_layers, split, r, first, LR)
 	logger.info('==> Reinitialization Finish')
 

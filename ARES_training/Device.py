@@ -34,7 +34,7 @@ class Client(Wireless):
 		logger.info('Connecting to Edge.')
 		self.sock.connect((server_addr,server_port))
 
-	def initialize(self, split_layer, offload, first, LR):
+	def initialize(self, split_layer, offload, round, first, LR):
 		if offload or first:
 			self.split_layer = split_layer
 
@@ -46,9 +46,15 @@ class Client(Wireless):
 		self.optimizer = optim.SGD(self.net.parameters(), lr=LR,
 					  momentum=0.9)
 		logger.debug('Weights..')
+
+		# here!! I have to load the same weights from the old model unless otherwise
 		weights = self.recv_msg(self.sock)[1]
 		if self.split_layer == (configurations.model_len -1):
-			self.net.load_state_dict(weights)
+			if round >= 0 and round < 10:
+				timer = 1
+				####################### start here !!!
+			else:
+				self.net.load_state_dict(weights)
 		else:
 			pweights = functions.split_weights_client(weights,self.net.state_dict())
 			self.net.load_state_dict(pweights)
@@ -178,6 +184,6 @@ class Client(Wireless):
 		msg = ['MSG_SUB_WEIGHTS_CLIENT_TO_SERVER', self.net.cpu().state_dict()]
 		self.send_msg(self.sock, msg)
 
-	def reinitialize(self, split_layers, offload, first, LR):
-		self.initialize(split_layers, offload, first, LR)
+	def reinitialize(self, split_layers, offload,round, first, LR):
+		self.initialize(split_layers, offload, round, first, LR)
 

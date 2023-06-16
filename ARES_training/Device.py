@@ -50,7 +50,7 @@ class Client(Wireless):
 		# here!! I have to load the same weights from the old model unless otherwise
 		weights = self.recv_msg(self.sock)[1]
 		if self.split_layer == (configurations.model_len -1):
-			if round >= 0 and round < 10:
+			if round >= 0 and round < 3:
 				timer = 1
 				####################### start here !!!
 			else:

@@ -84,17 +84,21 @@ class Edge_Server(Wireless):
 				# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.w_local_list[i].state_dict()]
 				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
 				self.send_msg(self.client_socks[i], msg)
-			else:
+			# else:
 
 				# sending the correct one
-				for p in range(len(self.groups)):
-					for m in range(len(self.groups[p])):
-						if p == 0:
-							msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet1.state_dict()]
-							self.send_msg(self.client_socks[self.groups[p][m]], msg)
-						else:
-							msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet2.state_dict()]
-							self.send_msg(self.client_socks[self.groups[p][m]], msg)
+				# we need to send only one!
+				# check ip address to socket 
+				# send the model that correspond to the group of the device
+		if round >= 3:
+			for p in range(len(self.groups)):
+				for m in range(len(self.groups[p])):
+					if p == 0:
+						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet1.state_dict()]
+						self.send_msg(self.client_socks[self.groups[p][m]], msg)
+					else:
+						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet2.state_dict()]
+						self.send_msg(self.client_socks[self.groups[p][m]], msg)
 			
 			####################### current key bit
 			########## how to determine the test set !!!

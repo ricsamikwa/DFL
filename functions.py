@@ -83,8 +83,8 @@ def get_test_dataloader(cpu_count=4):
 
   return testloader
 
-def get_test_dataloader_non_iid(cpu_count=4):
-	
+def get_test_dataloader_non_iid(group_id):
+  cpu_count=4
   testset = torchvision.datasets.CIFAR10(root=dataset_path, train=False, download=True)
   classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
   
@@ -92,23 +92,33 @@ def get_test_dataloader_non_iid(cpu_count=4):
   y_test = testset.targets
 
   # Let's choose cats (class 3 of CIFAR) and dogs (class 5 of CIFAR) as trainset/testset
-  cat_dog_testset = \
-  DatasetMaker(
-        [get_class_i(x_test, y_test, classDict['cat']),
-	       get_class_i(x_test, y_test, classDict['dog']),
-         get_class_i(x_test, y_test, classDict['horse']),
-	        get_class_i(x_test, y_test, classDict['plane']),
-	       get_class_i(x_test, y_test, classDict['car']),
-         get_class_i(x_test, y_test, classDict['frog'])
-	      ],
-        transform_with_aug
-    )
-    # DatasetMaker(
-    #     [get_class_i(x_test, y_test, classDict['cat']),
-	  #      get_class_i(x_test, y_test, classDict['dog']),
-    #      get_class_i(x_test, y_test, classDict['horse'])],
-    #     transform_with_aug
-    # )
+  # cat_dog_testset = \
+  # DatasetMaker(
+  #       [get_class_i(x_test, y_test, classDict['cat']),
+	#        get_class_i(x_test, y_test, classDict['dog']),
+  #        get_class_i(x_test, y_test, classDict['horse']),
+	#         get_class_i(x_test, y_test, classDict['plane']),
+	#        get_class_i(x_test, y_test, classDict['car']),
+  #        get_class_i(x_test, y_test, classDict['frog'])
+	#       ],
+  #       transform_with_aug
+  #   )
+  if group_id == 1:
+    cat_dog_testset = \
+      DatasetMaker(
+          [get_class_i(x_test, y_test, classDict['plane']),
+          get_class_i(x_test, y_test, classDict['car']),
+          get_class_i(x_test, y_test, classDict['frog'])],
+          transform_with_aug
+      )
+  if group_id == 2:
+    cat_dog_testset = \
+      DatasetMaker(
+          [get_class_i(x_test, y_test, classDict['cat']),
+          get_class_i(x_test, y_test, classDict['dog']),
+          get_class_i(x_test, y_test, classDict['horse'])],
+          transform_with_aug
+      )
   trainloader = DataLoader(
     cat_dog_testset, batch_size=B, shuffle=True, num_workers=cpu_count)
 

@@ -10,6 +10,7 @@ dataset_name = 'CIFAR10'
 home = sys.path[0].split('Fed-ARES')[0] + 'Fed-ARES'
 dataset_path = home +'/datasets/'+ dataset_name +'/'
 N = 50000 
+N_phi = 15000 
 
 # configuration settings - model
 model_cfg = {
@@ -44,7 +45,7 @@ B = 100 # minibatch
 # CLIENTS_CONFIG= {'192.168.1.33':0, '192.168.1.41':1, '192.168.1.40':2, '192.168.1.42':3, '192.168.1.43':4}
 # CLIENTS_LIST= ['192.168.1.33', '192.168.1.41', '192.168.1.40', '192.168.1.42', '192.168.1.43'] 
 
-iteration = {'192.168.1.49':5, '192.168.1.41':5, '192.168.1.40':5, '192.168.1.42':5, '192.168.1.43':5}  
+iteration = {'192.168.1.49':5, '192.168.1.40':5, '192.168.1.42':5, '192.168.1.43':5}  
 model_len = 7
 # model_len = 14
 random = True

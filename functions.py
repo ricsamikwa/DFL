@@ -73,6 +73,11 @@ def get_local_dataloader_non_iid(CLIENT_IDEX, cpu_count):
   return trainloader,classes
 
 
+def replace_numbers(input_tensor, mapping, device):
+    
+    new_tensor = torch.tensor([mapping[int(num)] for num in input_tensor], device=device)
+    return new_tensor
+
 
 def get_test_dataloader(cpu_count=4):
 	
@@ -103,7 +108,11 @@ def get_test_dataloader_non_iid(group_id):
 	#       ],
   #       transform_with_aug
   #   )
-  if group_id == 1:
+  # classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
+
+
+  #### mapping = {0: 0, 1: 1, 2: 6}
+  if group_id == 2:
     cat_dog_testset = \
       DatasetMaker(
           [get_class_i(x_test, y_test, classDict['plane']),
@@ -111,7 +120,9 @@ def get_test_dataloader_non_iid(group_id):
           get_class_i(x_test, y_test, classDict['frog'])],
           transform_with_aug
       )
-  if group_id == 2:
+    
+  #### mapping = {0: 3, 1: 5, 2: 7} 
+  if group_id == 1:
     cat_dog_testset = \
       DatasetMaker(
           [get_class_i(x_test, y_test, classDict['cat']),

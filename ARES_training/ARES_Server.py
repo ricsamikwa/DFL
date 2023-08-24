@@ -45,7 +45,7 @@ for r in range(configurations.R):
 
 	s_time = time.time()
 	bandwidth = Edge_Server.train(thread_number= configurations.K, client_ips= configurations.CLIENTS_LIST)
-	new_model = Edge_Server.aggregate(configurations.CLIENTS_LIST,r)
+	Edge_Server.aggregate(configurations.CLIENTS_LIST,r)
 	e_time = time.time()
 
 	# Recording each round training time, bandwidth and test accuracy
@@ -53,8 +53,9 @@ for r in range(configurations.R):
 	# res['trianing_time'].append(trianing_time)
 	# res['bandwidth_record'].append(bandwidth)
 
-	test_acc = Edge_Server.test(r)
+	test_acc1, test_acc2 = Edge_Server.test(r)
 	# res['test_acc_record'].append(test_acc)
+	avg_acc =  (test_acc1 + test_acc2)/2
 
 	#temp item - WALK - senstive
 	# config.split_layer[0] = config.split_layer[0] - 1
@@ -67,16 +68,16 @@ for r in range(configurations.R):
 		# config.split_layer = split_layers
 		split_layers = Edge_Server.adaptive_split(bandwidth)
 		splitlist = ''.join(str(e) for e in split_layers)
-		filename = 'ARES_split_'+splitlist+'_config_fdl.csv'
+		filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
 	else:
 		split_layers = configurations.split_layer
 		# filename = 'iid_cluster_3_fl_3_classes.csv'
-		filename = 'non_iid_2_fl_3_classes.csv'
+		filename = 'DFL_non_IID_G_2.csv'
 
-
+	# Here to start saving stuff
 	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:
 		writer = csv.writer(file)
-		writer.writerow([ trianing_time, test_acc])
+		writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
     
 	logger.info('Round Finish')
 	logger.info('==> Round Training Time: {:}'.format(trianing_time))

@@ -116,13 +116,20 @@ class Client(Wireless):
 
 		iteration_count = 0
 		nice_flag = False
+		other_flag = True
 
+		mapping = {0: 0, 1: 1, 2: 6} # temp!!! mapping at some level
 		if self.split_layer == (configurations.model_len -1): # Classic local training
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
-				loss = self.criterion(outputs, targets)
+				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				loss = self.criterion(outputs, mapped_targets)
+				if other_flag:
+					other_flag = False
+					print(targets)
+					print(mapped_targets)
 				loss.backward()
 				self.optimizer.step()
 				iteration_count+=1

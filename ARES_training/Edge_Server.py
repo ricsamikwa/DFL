@@ -43,8 +43,8 @@ class Edge_Server(Wireless):
 			self.client_socks[str(ip)] = client_sock
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
-		self.uninet1 = self.uninet
-		self.uninet2 = self.uninet
+		self.uninet1 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+		self.uninet2 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 		self.w_local_list =[]
 		self.groups = []
 		#test dataset stuff
@@ -95,9 +95,11 @@ class Edge_Server(Wireless):
 			for p in range(len(self.groups)):
 				for m in range(len(self.groups[p])):
 					if p == 0:
+						print("Sending Model 1 to " + self.groups[p][m])
 						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet1.state_dict()]
 						self.send_msg(self.client_socks[self.groups[p][m]], msg)
 					else:
+						print("Sending Model 2 to " + self.groups[p][m])
 						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet2.state_dict()]
 						self.send_msg(self.client_socks[self.groups[p][m]], msg)
 			
@@ -238,16 +240,21 @@ class Edge_Server(Wireless):
 		# this mean I am receiving the client model in a aspecific order. 
 		# i have to send model number i to device with address client_ips[i]
 		# create a list of devices based on the perceived groups
+		# NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+		# #################################################################################################
+
 		for i in range(len(client_ips)):
 			msg = self.recv_msg(self.client_socks[client_ips[i]], 'MSG_SUB_WEIGHTS_CLIENT_TO_SERVER')
 			if configurations.split_layer[i] != (configurations.model_len -1):
 				w_local = (functions.concat_weights(self.uninet.state_dict(),msg[1],self.nets[client_ips[i]].state_dict()),configurations.N / configurations.K)
 				w_local_list.append(w_local)
 			else:
-				w_local = (msg[1],configurations.N / configurations.K)
+				# w_local = (msg[1],configurations.N / configurations.K)
+				w_local = (msg[1],configurations.N_phi)
 				w_local_list.append(w_local)
 		zero_model = functions.zero_init(self.uninet).state_dict()
-		
+		zero_model1 = functions.zero_init(self.uninet1).state_dict()
+		zero_model2 = functions.zero_init(self.uninet2).state_dict()
 		# testing similarity before aggregrated_model
 		# testing the model similarity for each layer
 		# print(w_local_list[0])
@@ -292,11 +299,12 @@ class Edge_Server(Wireless):
 				groups.append([client_ips[2]])
 			else:
 				# group2 has device 3
-				groups.append([client_ips[1]])
 				groups.append([client_ips[0],client_ips[2]])
+				groups.append([client_ips[1]])
 				
-			print("aggregrated 12 size : ", len(w_local_list[0:len(groups[0])]))
-			print("aggregrated 13 size : ", len(w_local_list[len(groups[0]):len(groups[0])+len(groups[1])]) )
+				
+			print("aggregrated 13 size : ", len(w_local_list[0:len(groups[0])]))
+			print("aggregrated 2 size : ", len(w_local_list[len(groups[0]):len(groups[0])+len(groups[1])]) )
 
 			self.groups = groups
 
@@ -333,63 +341,118 @@ class Edge_Server(Wireless):
 
 		
 		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
-		aggregrated_model1 = functions.fed_avg(zero_model, w_local_list[0:len(self.groups[0])], configurations.N)
-		aggregrated_model2 = functions.fed_avg(zero_model, w_local_list[len(self.groups[0]):len(self.groups[0])+len(self.groups[1])], configurations.N)
+		# aggregrated_model1 = functions.fed_avg(zero_model1, w_local_list[0:len(self.groups[0])], configurations.N)
+		# aggregrated_model2 = functions.fed_avg(zero_model2, w_local_list[len(self.groups[0]):len(self.groups[0])+len(self.groups[1])], configurations.N)
+		# print(len(w_local_list))
+		# print(len(w_local_list[::len(w_local_list)-1]))
+		# print(len(w_local_list[len(w_local_list)-2:len(w_local_list)-1]))
+
+		aggregrated_model1 = functions.fed_avg(zero_model1, w_local_list[::len(w_local_list)-1], configurations.N_phi*len(w_local_list[::len(w_local_list)-1]))
+		aggregrated_model2 = functions.fed_avg(zero_model2, w_local_list[len(w_local_list)-2:len(w_local_list)-1], configurations.N_phi*len(w_local_list[len(w_local_list)-2:len(w_local_list)-1]))
 		
-		self.uninet.load_state_dict(aggregrated_model)
+		# self.uninet.load_state_dict(aggregrated_model) w_local_list[1]
 		self.uninet1.load_state_dict(aggregrated_model1)
 		self.uninet2.load_state_dict(aggregrated_model2)
 
-		return aggregrated_model1
+		# self.uninet1.load_state_dict(w_local_list[0][0])
+		# self.uninet2.load_state_dict(w_local_list[1][0]) #determines all
+
+		return aggregrated_model1, aggregrated_model2
 
 	def test(self, r):
-		# second group
-		self.uninet2.eval()
-		test_loss = 0
-		correct = 0
-		total = 0
-		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
-				inputs, targets = inputs.to(self.device), targets.to(self.device)
-				outputs = self.uninet2(inputs)
-				loss = self.criterion(outputs, targets)
-
-				test_loss += loss.item()
-				_, predicted = outputs.max(1)
-				total += targets.size(0)
-				correct += predicted.eq(targets).sum().item()
-
-		acc2 = 100.*correct/total
-		logger.info('Test Accuracy (Group 2): {}'.format(acc2))
-
-		# Save checkpoint.
-		torch.save(self.uninet2.state_dict(), './'+ configurations.model_name +'.pth')
 
 		# first group
 		self.uninet1.eval()
 		test_loss = 0
 		correct = 0
 		total = 0
+		print('++++++++++++++++++Test loader 1: ')
+		tag0 = []
+		tag2 = []
+		tag3 = []
+
+		mapping = {0: 3, 1: 5, 2: 7}
+		# mapping = {0: 0, 1: 1, 2: 6}
+		other_flag = True
+
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet1(inputs)
-				loss = self.criterion(outputs, targets)
+				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				loss = self.criterion(outputs, mapped_targets)
 
 				test_loss += loss.item()
 				_, predicted = outputs.max(1)
-				total += targets.size(0)
-				correct += predicted.eq(targets).sum().item()
+				total += mapped_targets.size(0)
+				correct += predicted.eq(mapped_targets).sum().item()
+		# 		if other_flag:
+		# 			other_flag = False
+		# 			tag0.append(targets)
+		# 			tag2.append(mapped_targets)
+		# 			tag3.append(predicted)
+				
 
+				
+
+		# print(tag0)
+		# print(tag2)
+		# print(tag3)
+				
 		acc1 = 100.*correct/total
 		logger.info('Test Accuracy (Group 1): {}'.format(acc1))
 
 		# Save checkpoint.
-		torch.save(self.uninet1.state_dict(), './'+ configurations.model_name +'.pth')
+		torch.save(self.uninet1.state_dict(), './'+ configurations.model_name +'1.pth')
 
+
+		# second group
+		self.uninet2.eval()
+		test_loss = 0
+		correct = 0
+		total = 0
+		print('++++++++++++++++++Test loader 2: ')
+		tag0 = []
+		tag2 = []
+		tag3 = []
+		mapping = {0: 0, 1: 1, 2: 6}
+		# mapping = {0: 3, 1: 5, 2: 7}
+
+		other_flag = True
+
+		with torch.no_grad():
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+				inputs, targets = inputs.to(self.device), targets.to(self.device)
+				outputs = self.uninet2(inputs)
+				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				loss = self.criterion(outputs, mapped_targets)
+				
+				test_loss += loss.item()
+				_, predicted = outputs.max(1)
+				total += mapped_targets.size(0)
+				correct += predicted.eq(mapped_targets).sum().item()
+				# if other_flag:
+				# 	other_flag = False
+				# 	tag0.append(targets)
+				# 	tag2.append(mapped_targets)
+				# 	tag3.append(predicted)
+				
+
+				
+
+		# print(tag0)
+		# print(tag2)
+		# print(tag3)
+		acc2 = 100.*correct/total
+		logger.info('Test Accuracy (Group 2): {}'.format(acc2))
+
+		# Save checkpoint.
+		torch.save(self.uninet2.state_dict(), './'+ configurations.model_name +'2.pth')
+
+		
 		acc = (acc1 + acc2)/2
 
-		return acc
+		return acc1, acc2
 	
 	# def test(self, r):
 	# 	self.uninet.eval()

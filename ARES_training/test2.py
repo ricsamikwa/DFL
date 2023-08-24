@@ -160,3 +160,37 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.show()
 
+
+
+import torch
+
+def replace_numbers(input_tensor, mapping):
+    """
+    Replace numbers in a PyTorch tensor according to a given mapping.
+
+    Args:
+        input_tensor (torch.Tensor): The input tensor containing numbers to be replaced.
+        mapping (dict): A dictionary where keys are the numbers to be replaced and values are the replacements.
+
+    Returns:
+        torch.Tensor: A new tensor with numbers replaced according to the mapping.
+    """
+    new_tensor = torch.tensor([mapping[int(num)] for num in input_tensor])
+    return new_tensor
+
+# Given tensor
+original_tensor = torch.tensor([1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 2, 0, 2, 2, 1, 0, 2, 2, 2, 0, 1, 0, 2,
+                                1, 2, 1, 1, 1, 2, 2, 2, 1, 0, 1, 0, 1, 2, 2, 0, 1, 1, 2, 0, 1, 0, 1, 2,
+                                2, 2, 2, 2, 2, 2, 1, 2, 0, 0, 2, 1, 0, 1, 2, 1, 0, 0, 1, 1, 0, 2, 1, 0,
+                                1, 0, 2, 2, 1, 1, 0, 2, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2, 1,
+                                0, 0, 2, 0])
+
+# Mapping of numbers to replacements
+mapping = {0: 8, 1: 5, 2: 3}
+
+# Replace numbers using the function
+new_tensor = replace_numbers(original_tensor, mapping)
+
+print(new_tensor)
+
+

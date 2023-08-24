@@ -41,6 +41,8 @@ logger.info('Preparing Data.')
 cpu_count = multiprocessing.cpu_count()
 
 trainloader, classes= functions.get_local_dataloader_non_iid(index, cpu_count)
+print("+++++++++++++++++++++++classes")
+print(classes)
 # trainloader, classes= functions.get_local_dataloader(index, cpu_count)
 
 if split:

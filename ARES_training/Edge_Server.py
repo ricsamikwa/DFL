@@ -476,6 +476,8 @@ class Edge_Server(Wireless):
 				
 		acc1 = 100.*correct/total
 
+		logger.info('Test Accuracy (TestLoader 1): {}'.format(acc1))
+
 		# second group
 		self.uninet.eval()
 		test_loss = 0
@@ -499,6 +501,8 @@ class Edge_Server(Wireless):
 				
 		acc2 = 100.*correct/total
 
+		logger.info('Test Accuracy (TestLoader 2): {}'.format(acc2))
+
 		# Save checkpoint.
 		torch.save(self.uninet.state_dict(), './'+ configurations.model_name +'.pth')
 
@@ -507,7 +511,7 @@ class Edge_Server(Wireless):
 		logger.info('Test Accuracy (No Groups): {}'.format(acc))
 
 
-		return acc
+		return acc1, acc2
 	
 	# The function to change more
 	def adaptive_split(self, bandwidth):

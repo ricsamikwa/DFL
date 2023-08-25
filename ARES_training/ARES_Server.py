@@ -76,15 +76,13 @@ for r in range(configurations.R):
 	trianing_time = e_time - s_time
 	# res['trianing_time'].append(trianing_time)
 	# res['bandwidth_record'].append(bandwidth)
-	test_acc1, test_acc2 = None, None
-	
+
 	if group:
 		test_acc1, test_acc2 = Edge_Server.test(r)
 		# res['test_acc_record'].append(test_acc)
-		avg_acc =  (test_acc1 + test_acc2)/2
 	else:
-
-		avg_acc = Edge_Server.test_no_groups(r)
+		test_acc1, test_acc2 = Edge_Server.test_no_groups(r)
+	avg_acc =  (test_acc1 + test_acc2)/2
 
 	#temp item - WALK - senstive
 	# config.split_layer[0] = config.split_layer[0] - 1
@@ -101,9 +99,9 @@ for r in range(configurations.R):
 	else:
 		split_layers = configurations.split_layer
 		if group:
-			filename = 'iid_cluster_3_fl_3_classes.csv'
+			filename = 'DFL_non_IID_c_2.csv'
 		else:
-			filename = 'DFL_non_IID_no_groups.csv'
+			filename = 'DFL_non_IID_no_groups_c_2.csv'
 
 	# Here to start saving stuff
 	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:

@@ -11,6 +11,7 @@ home = sys.path[0].split('Fed-ARES')[0] + 'Fed-ARES'
 dataset_path = home +'/datasets/'+ dataset_name +'/'
 N = 50000 
 N_phi = 15000 
+N_sub = 30000
 
 # configuration settings - model
 model_cfg = {

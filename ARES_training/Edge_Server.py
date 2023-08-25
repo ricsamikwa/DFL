@@ -26,7 +26,7 @@ np.random.seed(0)
 torch.manual_seed(0)
 
 class Edge_Server(Wireless):
-	def __init__(self, index, ip_address, server_port, model_name):
+	def __init__(self, index, ip_address, server_port, model_name,group):
 		super(Edge_Server, self).__init__(index, ip_address)
 		self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 		self.port = server_port
@@ -43,10 +43,14 @@ class Edge_Server(Wireless):
 			self.client_socks[str(ip)] = client_sock
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
-		self.uninet1 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
-		self.uninet2 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+		if group:
+			self.uninet1 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+			self.uninet2 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+			self.groups = []
+
+		
 		self.w_local_list =[]
-		self.groups = []
+
 		#test dataset stuff
 
 # 		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -106,7 +110,7 @@ class Edge_Server(Wireless):
 			####################### current key bit
 			############### mix everything. different test sets per group?
 
-	def initialize_old(self, split_layers, offload,round, first, LR):
+	def initialize_no_groups(self, split_layers, offload,round, first, LR):
 		if offload or first:
 			self.split_layers = split_layers
 			self.nets = {}
@@ -128,17 +132,9 @@ class Edge_Server(Wireless):
 			self.criterion = nn.CrossEntropyLoss()
 
 		
-			# send the right model 
-			# keep ip address when receiving
-			# send the right model 
+		msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
 		for i in self.client_socks:
-			if round > 0 and round < 10:
-				# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.w_local_list[i].state_dict()]
-				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
-				self.send_msg(self.client_socks[i], msg)
-			else:
-				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
-				self.send_msg(self.client_socks[i], msg)
+			self.send_msg(self.client_socks[i], msg)
 
 
 	def train(self, thread_number, client_ips):
@@ -210,7 +206,7 @@ class Edge_Server(Wireless):
 		logger.info(str(client_ip) + 'training end')
 		return 'Done'
 	
-	def aggregate_old(self, client_ips,round):
+	def aggregate_no_groups(self, client_ips,round):
 		w_local_list =[]
 		
 		for i in range(len(client_ips)):
@@ -219,12 +215,12 @@ class Edge_Server(Wireless):
 				w_local = (functions.concat_weights(self.uninet.state_dict(),msg[1],self.nets[client_ips[i]].state_dict()),configurations.N / configurations.K)
 				w_local_list.append(w_local)
 			else:
-				w_local = (msg[1],configurations.N / configurations.K)
+				w_local = (msg[1],configurations.N_phi)
 				w_local_list.append(w_local)
 		zero_model = functions.zero_init(self.uninet).state_dict()
 		
 		
-		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
+		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N_sub)
 		
 		self.uninet.load_state_dict(aggregrated_model)
 
@@ -241,6 +237,7 @@ class Edge_Server(Wireless):
 		# i have to send model number i to device with address client_ips[i]
 		# create a list of devices based on the perceived groups
 		# NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+		# okay it's fine now
 		# #################################################################################################
 
 		for i in range(len(client_ips)):
@@ -454,30 +451,64 @@ class Edge_Server(Wireless):
 
 		return acc1, acc2
 	
-	# def test(self, r):
-	# 	self.uninet.eval()
-	# 	test_loss = 0
-	# 	correct = 0
-	# 	total = 0
-	# 	with torch.no_grad():
-	# 		for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader)):
-	# 			inputs, targets = inputs.to(self.device), targets.to(self.device)
-	# 			outputs = self.uninet(inputs)
-	# 			loss = self.criterion(outputs, targets)
+	def test_no_groups(self, r):
 
-	# 			test_loss += loss.item()
-	# 			_, predicted = outputs.max(1)
-	# 			total += targets.size(0)
-	# 			correct += predicted.eq(targets).sum().item()
+		# first group
+		self.uninet.eval()
+		test_loss = 0
+		correct = 0
+		total = 0
+		print('++++++++++++++++++Test loader 1: ')
 
-	# 	acc = 100.*correct/total
-	# 	logger.info('Test Accuracy: {}'.format(acc))
+		mapping = {0: 3, 1: 5, 2: 7}
 
-	# 	# Save checkpoint.
-	# 	torch.save(self.uninet.state_dict(), './'+ configurations.model_name +'.pth')
+		with torch.no_grad():
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
+				inputs, targets = inputs.to(self.device), targets.to(self.device)
+				outputs = self.uninet(inputs)
+				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				loss = self.criterion(outputs, mapped_targets)
 
-	# 	return acc
+				test_loss += loss.item()
+				_, predicted = outputs.max(1)
+				total += mapped_targets.size(0)
+				correct += predicted.eq(mapped_targets).sum().item()
+				
+		acc1 = 100.*correct/total
 
+		# second group
+		self.uninet.eval()
+		test_loss = 0
+		correct = 0
+		total = 0
+		print('++++++++++++++++++Test loader 2: ')
+	
+		mapping = {0: 0, 1: 1, 2: 6}
+
+		with torch.no_grad():
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+				inputs, targets = inputs.to(self.device), targets.to(self.device)
+				outputs = self.uninet(inputs)
+				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				loss = self.criterion(outputs, mapped_targets)
+				
+				test_loss += loss.item()
+				_, predicted = outputs.max(1)
+				total += mapped_targets.size(0)
+				correct += predicted.eq(mapped_targets).sum().item()
+				
+		acc2 = 100.*correct/total
+
+		# Save checkpoint.
+		torch.save(self.uninet.state_dict(), './'+ configurations.model_name +'.pth')
+
+		
+		acc = (acc1 + acc2)/2
+		logger.info('Test Accuracy (No Groups): {}'.format(acc))
+
+
+		return acc
+	
 	# The function to change more
 	def adaptive_split(self, bandwidth):
 		
@@ -497,6 +528,9 @@ class Edge_Server(Wireless):
 
 	def reinitialize(self, split_layers, offload,round, first, LR):
 		self.initialize(split_layers, offload,round, first, LR)
+
+	def reinitialize_no_groups(self, split_layers, offload,round, first, LR):
+		self.initialize_no_groups(split_layers, offload,round, first, LR)
 
 	def scatter(self, msg):
 		for i in self.client_socks:

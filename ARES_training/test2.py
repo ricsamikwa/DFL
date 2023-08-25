@@ -162,35 +162,38 @@ plt.show()
 
 
 
-import torch
-
-def replace_numbers(input_tensor, mapping):
+def generate_non_iid_data(alpha, num_devices, num_samples_per_device):
     """
-    Replace numbers in a PyTorch tensor according to a given mapping.
-
-    Args:
-        input_tensor (torch.Tensor): The input tensor containing numbers to be replaced.
-        mapping (dict): A dictionary where keys are the numbers to be replaced and values are the replacements.
-
+    Generate non-IID data for federated learning using the Dirichlet distribution.
+    
+    Parameters:
+        alpha (float): Alpha parameter indicating the non-IIDness level.
+        num_devices (int): Number of devices (clients).
+        num_samples_per_device (int): Number of samples to generate per device.
+    
     Returns:
-        torch.Tensor: A new tensor with numbers replaced according to the mapping.
+        list of lists: List of device data, each containing a list of generated class labels.
     """
-    new_tensor = torch.tensor([mapping[int(num)] for num in input_tensor])
-    return new_tensor
+    if alpha <= 0 or alpha > 1:
+        raise ValueError("Alpha must be between 0 (exclusive) and 1 (inclusive).")
+    
+    class_probabilities = np.random.dirichlet([alpha] * 10)
+    
+    device_data = []
+    for _ in range(num_devices):
+        device_samples = np.random.choice(range(10), size=num_samples_per_device, p=class_probabilities)
+        device_data.append(device_samples.tolist())
+    
+    return device_data
 
-# Given tensor
-original_tensor = torch.tensor([1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 2, 0, 2, 2, 1, 0, 2, 2, 2, 0, 1, 0, 2,
-                                1, 2, 1, 1, 1, 2, 2, 2, 1, 0, 1, 0, 1, 2, 2, 0, 1, 1, 2, 0, 1, 0, 1, 2,
-                                2, 2, 2, 2, 2, 2, 1, 2, 0, 0, 2, 1, 0, 1, 2, 1, 0, 0, 1, 1, 0, 2, 1, 0,
-                                1, 0, 2, 2, 1, 1, 0, 2, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 2, 0, 0, 2, 1,
-                                0, 0, 2, 0])
+# Example usage
+alpha = 1  # Non-IIDness level
+num_devices = 4  # Number of devices (clients)
+num_samples_per_device = 100  # Number of samples per device
 
-# Mapping of numbers to replacements
-mapping = {0: 8, 1: 5, 2: 3}
+non_iid_data = generate_non_iid_data(alpha, num_devices, num_samples_per_device)
+for i, device_samples in enumerate(non_iid_data):
+    print(f"Device {i+1}: {device_samples}")
 
-# Replace numbers using the function
-new_tensor = replace_numbers(original_tensor, mapping)
-
-print(new_tensor)
 
 

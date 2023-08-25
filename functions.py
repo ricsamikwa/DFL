@@ -111,23 +111,27 @@ def get_test_dataloader_non_iid(group_id):
   # classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
 
 
-  #### mapping = {0: 0, 1: 1, 2: 6}
+  #### mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9}
   if group_id == 2:
     cat_dog_testset = \
       DatasetMaker(
           [get_class_i(x_test, y_test, classDict['plane']),
           get_class_i(x_test, y_test, classDict['car']),
-          get_class_i(x_test, y_test, classDict['frog'])],
+          get_class_i(x_test, y_test, classDict['frog']),
+	        get_class_i(x_test, y_test, classDict['ship']),
+	        get_class_i(x_test, y_test, classDict['truck'])],
           transform_with_aug
       )
     
-  #### mapping = {0: 3, 1: 5, 2: 7} 
+  #### mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4} 
   if group_id == 1:
     cat_dog_testset = \
       DatasetMaker(
           [get_class_i(x_test, y_test, classDict['cat']),
           get_class_i(x_test, y_test, classDict['dog']),
-          get_class_i(x_test, y_test, classDict['horse'])],
+          get_class_i(x_test, y_test, classDict['horse']),
+	        get_class_i(x_test, y_test, classDict['bird']),
+	        get_class_i(x_test, y_test, classDict['deer'])],
           transform_with_aug
       )
   trainloader = DataLoader(

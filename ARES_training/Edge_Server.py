@@ -368,7 +368,7 @@ class Edge_Server(Wireless):
 		tag2 = []
 		tag3 = []
 
-		mapping = {0: 3, 1: 5, 2: 7}
+		mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4} 
 		# mapping = {0: 0, 1: 1, 2: 6}
 		other_flag = True
 
@@ -412,7 +412,7 @@ class Edge_Server(Wireless):
 		tag0 = []
 		tag2 = []
 		tag3 = []
-		mapping = {0: 0, 1: 1, 2: 6}
+		mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9}
 		# mapping = {0: 3, 1: 5, 2: 7}
 
 		other_flag = True
@@ -460,7 +460,7 @@ class Edge_Server(Wireless):
 		total = 0
 		print('++++++++++++++++++Test loader 1: ')
 
-		mapping = {0: 3, 1: 5, 2: 7}
+		mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4} 
 
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
@@ -485,7 +485,7 @@ class Edge_Server(Wireless):
 		total = 0
 		print('++++++++++++++++++Test loader 2: ')
 	
-		mapping = {0: 0, 1: 1, 2: 6}
+		mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9}
 
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):

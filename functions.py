@@ -122,8 +122,7 @@ def get_test_dataloader_non_iid(group_id):
 		      get_class_i(x_test, y_test, classDict['truck']),
 		      get_class_i(x_test, y_test, classDict['cat']),
 	        get_class_i(x_test, y_test, classDict['dog']),
-		      get_class_i(x_test, y_test, classDict['horse']),
-	        get_class_i(x_test, y_test, classDict['bird'])],
+		      get_class_i(x_test, y_test, classDict['horse'])],
           transform_with_aug
       )
     
@@ -138,8 +137,7 @@ def get_test_dataloader_non_iid(group_id):
           get_class_i(x_test, y_test, classDict['deer']),
           get_class_i(x_test, y_test, classDict['plane']),
 	        get_class_i(x_test, y_test, classDict['car']),
-		      get_class_i(x_test, y_test, classDict['frog']),
-	        get_class_i(x_test, y_test, classDict['ship'])],
+		      get_class_i(x_test, y_test, classDict['frog'])],
           transform_with_aug
       )
   trainloader = DataLoader(

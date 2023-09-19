@@ -61,6 +61,22 @@ class Edge_Server(Wireless):
 		self.testloader1 = functions.get_test_dataloader_non_iid(1)
 		self.testloader2 = functions.get_test_dataloader_non_iid(2)
 
+		######################################################################
+		# commenting out for now !
+		# class_samples_counts = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]  # Specify the number of samples per class
+		# mappings = [
+		#     ['plane', 'car', 'frog', 'ship', 'truck', 'cat', 'dog', 'horse'],
+		#     ['cat', 'dog', 'horse', 'bird', 'deer', 'plane', 'car', 'frog']
+		# ]
+
+		# dataloaders = functions.get_test_dataloader_non_iid_chat(class_samples_counts, mappings)
+
+		# print(dataloaders)
+
+		# self.testloader1 = dataloaders[0]
+		# self.testloader2 = dataloaders[1]
+		######################################################################
+
 	def initialize(self, split_layers, offload,round, first, LR):
 		if offload or first:
 			self.split_layers = split_layers

@@ -96,21 +96,6 @@ def get_test_dataloader_non_iid(group_id):
   x_test = testset.data
   y_test = testset.targets
 
-  # Let's choose cats (class 3 of CIFAR) and dogs (class 5 of CIFAR) as trainset/testset
-  # cat_dog_testset = \
-  # DatasetMaker(
-  #       [get_class_i(x_test, y_test, classDict['cat']),
-	#        get_class_i(x_test, y_test, classDict['dog']),
-  #        get_class_i(x_test, y_test, classDict['horse']),
-	#         get_class_i(x_test, y_test, classDict['plane']),
-	#        get_class_i(x_test, y_test, classDict['car']),
-  #        get_class_i(x_test, y_test, classDict['frog'])
-	#       ],
-  #       transform_with_aug
-  #   )
-  # classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
-
-
   #### mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9, 5: 8, 6: 9, 7: 7, 8: 2}
   if group_id == 2:
     cat_dog_testset = \
@@ -162,6 +147,7 @@ def get_class_i(x, y, i):
     x_i = [x[j] for j in pos_i]
 
     return x_i
+
 
 class DatasetMaker(Dataset):
     def __init__(self, datasets, transformFunc=transform_no_aug):
@@ -461,3 +447,43 @@ def cka(gram_x, gram_y, debiased=False):
   normalization_x = np.linalg.norm(gram_x)
   normalization_y = np.linalg.norm(gram_y)
   return scaled_hsic / (normalization_x * normalization_y)
+
+
+
+def get_test_dataloader_non_iid_chat(class_samples_counts, mappings):
+    cpu_count = 4
+    testset = torchvision.datasets.CIFAR10(root=dataset_path, train=False, download=True)
+    classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
+
+    x_test = testset.data
+    y_test = testset.targets
+
+    dataloaders = []
+
+    for group_id, selected_classes in enumerate(mappings):
+        selected_indices = []
+        for class_name in selected_classes:
+            class_label = classDict[class_name]
+            class_indices = get_class_i(x_test, y_test, class_label)
+            num_samples = min(class_samples_counts[class_label], len(class_indices))
+            selected_indices += class_indices[:num_samples]
+
+        cat_dog_testset = DatasetMaker(
+            [x_test[i] for i in selected_indices],transform_with_aug
+        )
+
+        trainloader = DataLoader(
+            cat_dog_testset, batch_size=B, shuffle=True, num_workers=cpu_count
+        )
+
+        dataloaders.append(cat_dog_testset)
+
+    return dataloaders
+
+def get_class_i_chat(x, y, i):
+    y = np.array(y)
+    pos_i = np.argwhere(y == i)
+    pos_i = list(pos_i[:, 0])
+    x_i = [x[j] for j in pos_i]
+
+    return x_i

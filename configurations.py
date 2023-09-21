@@ -7,7 +7,7 @@ SERVER_PORT = 43000
 
 # Dataset 
 dataset_name = 'CIFAR10'
-home = sys.path[0].split('Fed-ARES')[0] + 'Fed-ARES'
+home = sys.path[0].split('DFL')[0] + 'DFL'
 dataset_path = home +'/datasets/'+ dataset_name +'/'
 N = 50000 
 N_phi = 10000 

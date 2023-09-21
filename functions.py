@@ -185,6 +185,7 @@ class DatasetMaker(Dataset):
 
         return bin_index, index_wrt_class
 
+
 def get_local_dataloader(CLIENT_IDEX, cpu_count):
 	indices = list(range(N))
 	part_tr = indices[int(5000 * 0) : int(5000 * (0+1))]
@@ -449,41 +450,73 @@ def cka(gram_x, gram_y, debiased=False):
   return scaled_hsic / (normalization_x * normalization_y)
 
 
+def create_custom_cifar10_dataloader(selected_classes, samples_per_class, batch_size=64):
+    # Define data transformations (you can customize these as needed)
+    transform = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ])
 
-def get_test_dataloader_non_iid_chat(class_samples_counts, mappings):
-    cpu_count = 4
-    testset = torchvision.datasets.CIFAR10(root=dataset_path, train=False, download=True)
-    classDict = {'plane': 0, 'car': 1, 'bird': 2, 'cat': 3, 'deer': 4, 'dog': 5, 'frog': 6, 'horse': 7, 'ship': 8, 'truck': 9}
+    # Download the CIFAR-10 dataset and apply transformations
+    train_dataset = torchvision.datasets.CIFAR10(root=dataset_path, train=False,
+                                                 download=True, transform=transform)
 
-    x_test = testset.data
-    y_test = testset.targets
+    # Initialize lists to store selected data and labels
+    selected_data = []
+    selected_labels = []
 
-    dataloaders = []
+    # Iterate through the dataset to select the desired samples
+    for data, label in train_dataset:
+        if label in selected_classes and selected_labels.count(label) < samples_per_class:
+            selected_data.append(data)
+            selected_labels.append(label)
 
-    for group_id, selected_classes in enumerate(mappings):
-        selected_indices = []
-        for class_name in selected_classes:
-            class_label = classDict[class_name]
-            class_indices = get_class_i(x_test, y_test, class_label)
-            num_samples = min(class_samples_counts[class_label], len(class_indices))
-            selected_indices += class_indices[:num_samples]
+    # Create a custom dataset using the selected data and labels
+    class CustomCIFAR10Dataset(torch.utils.data.Dataset):
+        def __init__(self, data, labels):
+            self.data = data
+            self.labels = labels
 
-        cat_dog_testset = DatasetMaker(
-            [x_test[i] for i in selected_indices],transform_with_aug
-        )
+        def __len__(self):
+            return len(self.data)
 
-        trainloader = DataLoader(
-            cat_dog_testset, batch_size=B, shuffle=True, num_workers=cpu_count
-        )
+        def __getitem__(self, idx):
+            sample, label = self.data[idx], self.labels[idx]
 
-        dataloaders.append(cat_dog_testset)
+            return sample, label
+    custom_dataset = CustomCIFAR10Dataset(selected_data, selected_labels)
+    custom_dataloader = torch.utils.data.DataLoader(custom_dataset, batch_size=batch_size, shuffle=True)
 
-    return dataloaders
+    return custom_dataloader
 
-def get_class_i_chat(x, y, i):
-    y = np.array(y)
-    pos_i = np.argwhere(y == i)
-    pos_i = list(pos_i[:, 0])
-    x_i = [x[j] for j in pos_i]
+def generate_non_iid_distribution(alpha, num_classes, total_samples):
+    """
+    Generate non-IID class distribution using Dirichlet distribution.
 
-    return x_i
+    Args:
+        alpha (float): Level of non-IIDness in the range [0, 1].
+        num_classes (int): Total number of classes.
+        total_samples (int): Total number of samples to be distributed.
+
+    Returns:
+        selected_classes (list): List of selected classes.
+        samples_per_class (list): List of samples per class.
+    """
+    if alpha < 0 or alpha > 1:
+        raise ValueError("Alpha should be in the range [0, 1]")
+
+    # Generate a random distribution using the Dirichlet distribution
+    class_probs = np.random.dirichlet([alpha] * num_classes)
+
+    # Calculate the number of samples per class based on the distribution
+    samples_per_class = (class_probs * total_samples).astype(int)
+
+    # Ensure that the total number of samples matches the desired value
+    samples_per_class[-1] += total_samples - np.sum(samples_per_class)
+
+    # Create a list of selected classes
+    selected_classes = np.arange(num_classes)
+
+    return selected_classes, samples_per_class

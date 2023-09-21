@@ -58,23 +58,33 @@ class Edge_Server(Wireless):
 # 		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=True, transform=self.transform_test)
 # 		self.testloader = torch.utils.data.DataLoader(self.testset, batch_size=100, shuffle=False, num_workers=4)
 
-		self.testloader1 = functions.get_test_dataloader_non_iid(1)
-		self.testloader2 = functions.get_test_dataloader_non_iid(2)
+		# self.testloader1 = functions.get_test_dataloader_non_iid(1)
+		# self.testloader2 = functions.get_test_dataloader_non_iid(2)
+		######################################################################
+
+		alpha = 0.5  # Adjust the level of non-IIDness (0 for IID, 1 for highly non-IID)
+		num_classes = 10  # Total number of classes in CIFAR-10
+		total_samples = 50000  # Total number of samples to be distributed
+
+		selected_classes, samples_per_class = functions.generate_non_iid_distribution(alpha, num_classes, total_samples)
+
+		print("Selected Classes:", selected_classes)
+		print("Samples Per Class:", samples_per_class)
 
 		######################################################################
-		# commenting out for now !
-		# class_samples_counts = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]  # Specify the number of samples per class
-		# mappings = [
-		#     ['plane', 'car', 'frog', 'ship', 'truck', 'cat', 'dog', 'horse'],
-		#     ['cat', 'dog', 'horse', 'bird', 'deer', 'plane', 'car', 'frog']
-		# ]
 
-		# dataloaders = functions.get_test_dataloader_non_iid_chat(class_samples_counts, mappings)
+		selected_classes = [0, 5, 7, 2, 4, 0, 1, 6]  # For example, classes 0, 1, and 2
+		samples_per_class = 500  # Adjust this as needed
+		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
 
-		# print(dataloaders)
+		self.testloader1 = custom_dataloader
+		
+	
+		selected_classes = [0, 1, 6, 8, 9, 8, 9, 7]  # For example, classes 0, 1, and 2
+		# samples_per_class = 500  # Adjust this as needed
+		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
 
-		# self.testloader1 = dataloaders[0]
-		# self.testloader2 = dataloaders[1]
+		self.testloader2 = custom_dataloader
 		######################################################################
 
 	def initialize(self, split_layers, offload,round, first, LR):
@@ -392,7 +402,8 @@ class Edge_Server(Wireless):
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet1(inputs)
-				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				mapped_targets = targets
 				loss = self.criterion(outputs, mapped_targets)
 
 				test_loss += loss.item()
@@ -437,7 +448,8 @@ class Edge_Server(Wireless):
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet2(inputs)
-				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				mapped_targets = targets
 				loss = self.criterion(outputs, mapped_targets)
 				
 				test_loss += loss.item()

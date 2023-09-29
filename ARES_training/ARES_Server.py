@@ -99,9 +99,9 @@ for r in range(configurations.R):
 	else:
 		split_layers = configurations.split_layer
 		if group:
-			filename = 'DFL_non_IID_c_8_1.csv'
+			filename = 'DFL_non_IID_c_8_2000.csv'
 		else:
-			filename = 'DFL_non_IID_no_groups_c_8_1.csv'
+			filename = 'DFL_non_IID_no_groups_c_8_2000.csv'
 
 	# Here to start saving stuff
 	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:

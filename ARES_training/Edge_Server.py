@@ -74,7 +74,7 @@ class Edge_Server(Wireless):
 		######################################################################
 
 		selected_classes = [0, 5, 7, 2, 4, 0, 1, 6]  # For example, classes 0, 1, and 2
-		samples_per_class = 500  # Adjust this as needed
+		samples_per_class = 1000  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
 
 		self.testloader1 = custom_dataloader
@@ -494,7 +494,8 @@ class Edge_Server(Wireless):
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
-				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				mapped_targets = targets
 				loss = self.criterion(outputs, mapped_targets)
 
 				test_loss += loss.item()
@@ -519,7 +520,8 @@ class Edge_Server(Wireless):
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
-				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
+				mapped_targets = targets
 				loss = self.criterion(outputs, mapped_targets)
 				
 				test_loss += loss.item()

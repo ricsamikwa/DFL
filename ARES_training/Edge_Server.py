@@ -73,14 +73,14 @@ class Edge_Server(Wireless):
 
 		######################################################################
 
-		selected_classes = [0, 5, 7] #[0, 5, 7, 2, 4, 0, 1, 6]  # For example, classes 0, 1, and 2
+		selected_classes = [0, 5, 7, 2, 4] #[0, 5, 7, 2, 4, 0, 1, 6]  # For example, classes 0, 1, and 2
 		samples_per_class = 1000  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
 
 		self.testloader1 = custom_dataloader
 		
 	
-		selected_classes = [1, 6, 8] #[0, 1, 6, 8, 9, 8, 9, 7]  # For example, classes 0, 1, and 2
+		selected_classes = [1, 6, 8, 3, 9] #[0, 1, 6, 8, 9, 8, 9, 7]  # For example, classes 0, 1, and 2
 		# samples_per_class = 500  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
 
@@ -246,7 +246,7 @@ class Edge_Server(Wireless):
 		zero_model = functions.zero_init(self.uninet).state_dict()
 		
 		
-		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N_sub)
+		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N_phi*3)
 		
 		self.uninet.load_state_dict(aggregrated_model)
 

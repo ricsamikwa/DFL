@@ -52,9 +52,9 @@ first = False
 	#handle changes of split layers
 
 if split:
-	logger.info('ARES Training')
+	logger.info('DFL Training')
 else:
-	logger.info('Local Training')
+	logger.info('FL Training')
 
 # res = {}
 # res['trianing_time'], res['test_acc_record'], res['bandwidth_record'] = [], [], []

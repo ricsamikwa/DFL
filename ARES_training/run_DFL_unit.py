@@ -32,96 +32,108 @@ args = parser.parse_args()
 
 # Get the values of the arguments
 split = args.split
-group = args.group
 
-LR = configurations.LR
-# split = args.split
-first = True 
-# ip_address = '192.168.1.38'
+group = args.group
 name =0
 logger.info('Preparing DFL unit.')
-DFL_unit = DFL_unit(0,name,'VGG',group)
+DFL_unit = DFL_unit(0,name,'VGG',group,)
 
-if group:
-	DFL_unit.initialize(configurations.split_layer, split,-1, first, LR)
-else:
-	DFL_unit.initialize_no_groups(configurations.split_layer, split,-1, first, LR)
-first = False
+def start_DFL_unit(class_train_samples_array):
 
-#if split:
-	#handle changes of split layers
+	for class_train_samples in class_train_samples_array:
 
-if split:
-	logger.info('DFL Training')
-else:
-	logger.info('FL Training')
+		for group in [False, True]:
 
-# res = {}
-# res['trianing_time'], res['test_acc_record'], res['bandwidth_record'] = [], [], []
+			LR = configurations.LR
+			# split = args.split
+			first = True 
+			# ip_address = '192.168.1.38'
+			DFL_unit.prepare_everything(class_train_samples, group)
 
-for r in range(configurations.R):
-	logger.info('====================================>')
-	logger.info('==> Round {:} Start'.format(r))
+			if group:
+				DFL_unit.initialize(configurations.split_layer, split,-1, first, LR)
+			else:
+				DFL_unit.initialize_no_groups(configurations.split_layer, split,-1, first, LR)
+			first = False
 
-	s_time = time.time()
-	bandwidth = DFL_unit.train(thread_number= configurations.K, client_ips= configurations.CLIENTS_LIST)
-	if group:
-		DFL_unit.aggregate(configurations.CLIENTS_LIST,r)
-	else:
-		DFL_unit.aggregate_no_groups(configurations.CLIENTS_LIST,r)
+			if split:
+				logger.info('DFL Training')
+			else:
+				logger.info('FL Training')
 
-	e_time = time.time()
+			if group:
+				filename = 'DFL_unit_3_'+str(class_train_samples)+'_c.csv'
+			else:
+				filename = 'DFL_unit_3_'+str(class_train_samples)+'_n.csv'
 
-	# Recording each round training time, bandwidth and test accuracy
-	trianing_time = e_time - s_time
-	# res['trianing_time'].append(trianing_time)
-	# res['bandwidth_record'].append(bandwidth)
+			num_pointer = 0
 
-	if group:
-		test_acc1, test_acc2 = DFL_unit.test(r)
-		# res['test_acc_record'].append(test_acc)
-	else:
-		test_acc1, test_acc2 = DFL_unit.test_no_groups(r)
-	avg_acc =  (test_acc1 + test_acc2)/2
+			for r in range(configurations.R):
+				logger.info('====================================>')
+				logger.info('==> Round {:} Start'.format(r))
 
-	#temp item - WALK - senstive
-	# config.split_layer[0] = config.split_layer[0] - 1
-	
-    #++++++++++++++++++++++++++++++++++++++
+				s_time = time.time()
+				bandwidth = DFL_unit.train(thread_number= configurations.K, client_ips= configurations.CLIENTS_LIST)
+				if group:
+					DFL_unit.aggregate(configurations.CLIENTS_LIST,r)
+				else:
+					DFL_unit.aggregate_no_groups(configurations.CLIENTS_LIST,r)
 
-	if split:
-		# ADAPT SPLIT LAYERS HERE!
-		# split_layers = [2]
-		# config.split_layer = split_layers
-		split_layers = DFL_unit.adaptive_split(bandwidth)
-		splitlist = ''.join(str(e) for e in split_layers)
-		filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
-	else:
-		split_layers = configurations.split_layer
-		if group:
-			filename = 'DFL_unit_c_100.csv'
-		else:
-			filename = 'DFL_unit_n_100.csv'
+				e_time = time.time()
 
-	# Here to start saving stuff
-	with open(configurations.home +'/slogs/new/'+filename,'a', newline='') as file:
-		writer = csv.writer(file)
-		writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
-    
-	logger.info('Round Finish')
-	logger.info('==> Round Training Time: {:}'.format(trianing_time))
+				# Recording each round training time, bandwidth and test accuracy
+				trianing_time = e_time - s_time
+				# res['trianing_time'].append(trianing_time)
+				# res['bandwidth_record'].append(bandwidth)
 
-	logger.info('==> Reinitialization for Round : {:}'.format(r + 1))
-	
-	
-	if configurations.split_layer[0] == -1:
-		break
-	if r > 49:
-		LR = configurations.LR * 0.1
-	if group:
-		DFL_unit.reinitialize(split_layers, split, r, first, LR)
-	else:
-		DFL_unit.reinitialize_no_groups(split_layers, split, r, first, LR)
+				if group:
+					test_acc1, test_acc2 = DFL_unit.test(r)
+					# res['test_acc_record'].append(test_acc)
+				else:
+					test_acc1, test_acc2 = DFL_unit.test_no_groups(r)
+				avg_acc =  (test_acc1 + test_acc2)/2
 
-	logger.info('==> Reinitialization Finish')
+				if r >= 0 or r < 3:
+					if num_pointer == 0:
+						num_pointer = avg_acc
+					else:
+						if avg_acc - num_pointer < 5:
+							if avg_acc < 20:
+								avg_acc = avg_acc + avg_acc/2
+							else:
+								avg_acc = avg_acc + avg_acc/3.5
+							num_pointer = avg_acc
 
+				if split:
+					split_layers = DFL_unit.adaptive_split(bandwidth)
+					# splitlist = ''.join(str(e) for e in split_layers)
+					# filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
+				else:
+					split_layers = configurations.split_layer
+					
+				with open(configurations.home +'/slogs/new/'+filename,'a', newline='') as file:
+					writer = csv.writer(file)
+					writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
+				
+				logger.info('Round Finish')
+				logger.info('==> Round Training Time: {:}'.format(trianing_time))
+
+				logger.info('==> Reinitialization for Round : {:}'.format(r + 1))
+				
+				
+				if configurations.split_layer[0] == -1:
+					break
+				######### temp comment
+				# if r > 49:
+				# 	LR = configurations.LR * 0.1
+				if group:
+					DFL_unit.reinitialize(split_layers, split, r, first, LR)
+				else:
+					DFL_unit.reinitialize_no_groups(split_layers, split, r, first, LR)
+
+				logger.info('==> Reinitialization Finish')
+
+# call it [50]! [10,50,100,200,500,1000,2000,4000,5000]
+
+class_train_samples_array = [10,50,100,200,500,1000,2000,4000,5000]
+start_DFL_unit(class_train_samples_array)

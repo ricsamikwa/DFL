@@ -492,6 +492,48 @@ def create_custom_cifar10_dataloader(selected_classes, samples_per_class, train=
 
     return custom_dataloader
 
+def create_custom_mnist_dataloader(selected_classes, samples_per_class, train=True):
+    # Define data transformations (you can customize these as needed)
+    batch_size = 64
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    # Download the MNIST dataset and apply transformations
+    train_dataset = torchvision.datasets.MNIST(root='./data', train=train,
+                                               download=True, transform=transform)
+
+    # Initialize lists to store selected data and labels
+    selected_data = []
+    selected_labels = []
+
+    # Iterate through the dataset to select the desired samples
+    for data, label in train_dataset:
+        if label in selected_classes and selected_labels.count(label) < samples_per_class:
+            selected_data.append(data)
+            selected_labels.append(label)
+
+    # Create a custom dataset using the selected data and labels
+    class CustomMNISTDataset(torch.utils.data.Dataset):
+        def __init__(self, data, labels):
+            self.data = data
+            self.labels = labels
+
+        def __len__(self):
+            return len(self.data)
+
+        def __getitem__(self, idx):
+            sample, label = self.data[idx], self.labels[idx]
+
+            return sample, label
+
+    custom_dataset = CustomMNISTDataset(selected_data, selected_labels)
+    custom_dataloader = torch.utils.data.DataLoader(custom_dataset, batch_size=batch_size, shuffle=True)
+
+    return custom_dataloader
+
+
 def generate_non_iid_distribution(alpha, num_classes, total_samples):
     """
     Generate non-IID class distribution using Dirichlet distribution.

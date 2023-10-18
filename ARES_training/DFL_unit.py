@@ -12,6 +12,7 @@ import random
 import numpy as np
 import math
 import logging
+from ARESopt.ARES_optimisation import BenchClient
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -31,17 +32,6 @@ class DFL_unit(Wireless):
 		# self.port = server_port
 		self.model_name = model_name
 		self.semaphore = 0
-		# self.sock.bind((self.ip, self.port))
-		# self.client_socks = {}
-
-		# while len(self.client_socks) < configurations.K:
-		# 	self.sock.listen(5)
-		# 	logger.info("CONNECTIONS.")
-		# 	# (client_sock, (ip, port)) = self.sock.accept()
-		# 	logger.info('connection ' + str(ip))
-		# 	logger.info(client_sock)
-		# 	self.client_socks[str(ip)] = client_sock
-		split_layers = configurations.CLIENTS_LIST
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 		if group:
@@ -53,14 +43,13 @@ class DFL_unit(Wireless):
 		self.w_local_list =[]
 
 		self.trainloaders = {}
-# 		self.transform_test = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-# ])
-# 		self.testset = torchvision.datasets.CIFAR10(root=configurations.dataset_path, train=False, download=True, transform=self.transform_test)
-# 		self.testloader = torch.utils.data.DataLoader(self.testset, batch_size=100, shuffle=False, num_workers=4)
 
-		# self.testloader1 = functions.get_test_dataloader_non_iid(1)
-		# self.testloader2 = functions.get_test_dataloader_non_iid(2)
-		######################################################################
+		self.testloaders = {}
+
+		
+	def prepare_everything(self, class_train_samples, group):
+
+		split_layers = configurations.CLIENTS_LIST
 
 		alpha = 0.5  # Adjust the level of non-IIDness (0 for IID, 1 for highly non-IID)
 		num_classes = 10  # Total number of classes in CIFAR-10
@@ -71,21 +60,22 @@ class DFL_unit(Wireless):
 		print("Selected Classes:", selected_classes_h)
 		print("Samples Per Class:", samples_per_class)
 
-		######################################################################
+		#####################################CIPHER10#################################
 
-		selected_classes1 = [0, 5, 7, 2, 4, 8, 1, 6] #[0, 5, 7] #  # For example, classes 0, 1, and 2
-		samples_per_class = 100  # Adjust this as needed
+		selected_classes1 = [0, 5, 7] #[0, 5, 7, 2, 4, 8, 1, 6]  #  # For example, classes 0, 1, and 2
+		samples_per_class = 1000  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class)
 
-		self.testloader1 = custom_dataloader
+		self.testloaders[0] = custom_dataloader
 		
 	
-		selected_classes2 =[0, 1, 6, 8, 9, 3, 5, 7]# [1, 6, 8]   # For example, classes 0, 1, and 2
+		selected_classes2 =[1, 6, 8] #[0, 1, 6, 8, 9, 3, 5, 7]   # For example, classes 0, 1, and 2
 		
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes2, samples_per_class)
 
-		self.testloader2 = custom_dataloader
-		######################################################################
+		self.testloaders[1] = custom_dataloader
+		
+		samples_per_class = class_train_samples
 		configurations.N_phi = samples_per_class * len(selected_classes2)
 
 		for i in range(len(split_layers)):
@@ -95,9 +85,34 @@ class DFL_unit(Wireless):
 					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class,True)
 				else:
 					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(selected_classes2, samples_per_class,True)
+		
+		#################################################MNIST#####################
 
-		########################################
+		# selected_classes1 = [0, 5, 7] #[0, 5, 7, 2, 4, 8, 1, 6]  #  # For example, classes 0, 1, and 2
+		# samples_per_class = 1000  # Adjust this as needed
+		# custom_dataloader = functions.create_custom_mnist_dataloader(selected_classes1, samples_per_class)
 
+		# self.testloaders[0] = custom_dataloader
+		
+	
+		# selected_classes2 =[1, 6, 8] #[0, 1, 6, 8, 9, 3, 5, 7]   # For example, classes 0, 1, and 2
+		
+		# custom_dataloader = functions.create_custom_mnist_dataloader(selected_classes2, samples_per_class)
+
+		# self.testloaders[1] = custom_dataloader
+		
+		# samples_per_class = class_train_samples
+		# configurations.N_phi = samples_per_class * len(selected_classes2)
+
+		# for i in range(len(split_layers)):
+		# 		client_ip = configurations.CLIENTS_LIST[i]
+
+		# 		if i == 0 or i ==2:
+		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes1, samples_per_class,True)
+		# 		else:
+		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes2, samples_per_class,True)
+		
+		
 	def initialize(self, split_layers, offload,round, first, LR):
 		if offload or first:
 			self.split_layers = split_layers
@@ -112,40 +127,32 @@ class DFL_unit(Wireless):
 					cweights = functions.get_model('Client', self.model_name, split_layers[i], self.device, configurations.model_cfg).state_dict()
 					pweights = functions.split_weights_server(self.uninet.state_dict(),cweights,self.nets[client_ip].state_dict())
 					self.nets[client_ip].load_state_dict(pweights)
-
-					self.optimizers[client_ip] = optim.SGD(self.nets[client_ip].parameters(), lr=LR,
-					  momentum=0.9)
 				else:
-					self.nets[client_ip] = functions.get_model('Server', self.model_name, split_layers[i], self.device, configurations.model_cfg)
+					self.nets[client_ip] = functions.get_model('Client', self.model_name, split_layers[i], self.device, configurations.model_cfg)
+				self.optimizers[client_ip] = optim.SGD(self.nets[client_ip].parameters(), lr=LR,momentum=0.9)
 			self.criterion = nn.CrossEntropyLoss()
 
+		if round == -1:
+			uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+			for i in range(len(split_layers)):
+				client_ip = configurations.CLIENTS_LIST[i]
+				self.nets[client_ip].load_state_dict(uninet.state_dict())
 		
-			
-		# for i in self.client_socks:
-		# 	if round < 3:
-		# 		# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.w_local_list[i].state_dict()]
-		# 		msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
-		# 		self.send_msg(self.client_socks[i], msg)
-			# else:
+		# here we want the models to diverge intentinally
+		if round >= 0 and round < 3:
+			for i in range(len(split_layers)):
+				client_ip = configurations.CLIENTS_LIST[i]
+				self.nets[client_ip].load_state_dict(self.nets[client_ip].state_dict())
+				
+		if round >= 3:
+			for i in range(len(split_layers)):
+				client_ip = configurations.CLIENTS_LIST[i]
 
-				# sending the correct one
-				# we need to send only one!
-				# check ip address to socket 
-				# send the model that correspond to the group of the device
-		# if round >= 3:
-		# 	for p in range(len(self.groups)):
-		# 		for m in range(len(self.groups[p])):
-		# 			if p == 0:
-		# 				print("Sending Model 1 to " + self.groups[p][m])
-		# 				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet1.state_dict()]
-		# 				self.send_msg(self.client_socks[self.groups[p][m]], msg)
-		# 			else:
-		# 				print("Sending Model 2 to " + self.groups[p][m])
-		# 				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet2.state_dict()]
-		# 				self.send_msg(self.client_socks[self.groups[p][m]], msg)
-			
-			####################### current key bit
-			############### mix everything. different test sets per group?
+				if i == 0 or i ==2:
+					self.nets[client_ip].load_state_dict(self.uninet1.state_dict())
+				else:
+					self.nets[client_ip].load_state_dict(self.uninet2.state_dict())
+
 
 	def initialize_no_groups(self, split_layers, offload,round, first, LR):
 		if offload or first:
@@ -172,10 +179,15 @@ class DFL_unit(Wireless):
 				self.optimizers[client_ip] = optim.SGD(self.nets[client_ip].parameters(), lr=LR,momentum=0.9)
 					
 			self.criterion = nn.CrossEntropyLoss()
-
-		for i in range(len(split_layers)):
-			client_ip = configurations.CLIENTS_LIST[i]
-			self.nets[client_ip].load_state_dict(self.uninet.state_dict())
+		if round == -1:
+			uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
+			for i in range(len(split_layers)):
+				client_ip = configurations.CLIENTS_LIST[i]
+				self.nets[client_ip].load_state_dict(uninet.state_dict())
+		else:
+			for i in range(len(split_layers)):
+				client_ip = configurations.CLIENTS_LIST[i]
+				self.nets[client_ip].load_state_dict(self.uninet.state_dict())
 
 	def train(self, thread_number, client_ips):
 		
@@ -193,11 +205,6 @@ class DFL_unit(Wireless):
 
 		for i in range(len(client_ips)):
 			self.threads[client_ips[i]].join()
-
-		# self.ttpi = {} # Training time per iteration
-		# for s in self.client_socks:
-		# 	msg = self.recv_msg(self.client_socks[s], 'MSG_TIME_ITERATION')
-		# 	self.ttpi[msg[1]] = msg[2]
 
 		return True
 
@@ -221,7 +228,7 @@ class DFL_unit(Wireless):
 	def _thread_training_offloading(self, client_ip):
 		#issues here!!
 		# iteration = int((config.N / (config.K * config.B)))
-		iteration = 50 # verify this number 50000/(5*100) = 100, but we have 50 iterations from the data ?
+		iteration = 50 
 		# logger.info(str(iteration) + ' iterations!!')
 		for i in range(iteration):
 			msg = self.recv_msg(self.client_socks[client_ip], 'MSG_INTERMEDIATE_ACTIVATIONS_CLIENT_TO_SERVER')
@@ -265,44 +272,32 @@ class DFL_unit(Wireless):
 
 	def aggregate(self, client_ips,round):
 		w_local_list =[]
-		# w_group1 = []
-		# w_group2 = []
 		groups = []
 
-		# this mean I am receiving the client model in a aspecific order. 
-		# i have to send model number i to device with address client_ips[i]
-		# create a list of devices based on the perceived groups
-		# NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-		# okay it's fine now
-		# #################################################################################################
-
 		for i in range(len(client_ips)):
-			msg = self.recv_msg(self.client_socks[client_ips[i]], 'MSG_SUB_WEIGHTS_CLIENT_TO_SERVER')
+			# msg = self.recv_msg(self.client_socks[client_ips[i]], 'MSG_SUB_WEIGHTS_CLIENT_TO_SERVER')
 			if configurations.split_layer[i] != (configurations.model_len -1):
-				w_local = (functions.concat_weights(self.uninet.state_dict(),msg[1],self.nets[client_ips[i]].state_dict()),configurations.N / configurations.K)
-				w_local_list.append(w_local)
+				# w_local = (functions.concat_weights(self.uninet.state_dict(),msg[1],self.nets[client_ips[i]].state_dict()),configurations.N / configurations.K)
+				# w_local_list.append(w_local)
+				pass
 			else:
 				# w_local = (msg[1],configurations.N / configurations.K)
-				w_local = (msg[1],configurations.N_phi)
+				w_local = (self.nets[client_ips[i]].state_dict(),configurations.N_phi)
 				w_local_list.append(w_local)
 		zero_model = functions.zero_init(self.uninet).state_dict()
 		zero_model1 = functions.zero_init(self.uninet1).state_dict()
 		zero_model2 = functions.zero_init(self.uninet2).state_dict()
-		# testing similarity before aggregrated_model
-		# testing the model similarity for each layer
-		# print(w_local_list[0])
+	
 		init_temp_one = w_local_list[0]
 		init_temp_two = w_local_list[1]
 		init_temp_three = w_local_list[2]
-		# for phi in range(configurations.N):
 
-		# if round == 0 or round ==10 or round == 99:	
 		if round ==3:	
 			cka_agreggate_12 = 0
 			cka_agreggate_13 = 0
 			count = 0
 			for p in self.uninet.cpu().state_dict():
-				# print(p)
+	
 				temp_one = init_temp_one[0][p]
 				temp_two = init_temp_two[0][p]
 				temp_three = init_temp_three[0][p]
@@ -310,7 +305,6 @@ class DFL_unit(Wireless):
 				new_temp_two = temp_two.numpy().flatten()
 				new_temp_three = temp_three.numpy().flatten()
 
-				# print(new_temp_one)
 				cka_from_features12 = functions.model_similarity_cka(new_temp_one, new_temp_two)
 				cka_from_features13 = functions.model_similarity_cka(new_temp_one, new_temp_three)
 
@@ -327,11 +321,9 @@ class DFL_unit(Wireless):
 
 		
 			if cka_agreggate_12 > cka_agreggate_13:
-				# group 1 has devices 1 and 2
 				groups.append([client_ips[0],client_ips[1]])
 				groups.append([client_ips[2]])
 			else:
-				# group2 has device 3
 				groups.append([client_ips[0],client_ips[2]])
 				groups.append([client_ips[1]])
 				
@@ -340,30 +332,6 @@ class DFL_unit(Wireless):
 			print("aggregrated 2 size : ", len(w_local_list[len(groups[0]):len(groups[0])+len(groups[1])]) )
 
 			self.groups = groups
-
-			########################################################################
-			# print("here we test again the agregated models")
-
-			# temp_aggregrated_model1 = self.uninet1.state_dict()
-			# temp_aggregrated_model2 = self.uninet2.state_dict()
-
-			# for p in self.uninet1.cpu().state_dict():
-			# 	# print(p)
-			# 	################## start here !!!!!
-			# 	###### what is the zero
-			# 	temp_one = temp_aggregrated_model1[0][p]
-			# 	temp_two = temp_aggregrated_model2[0][p]
-				
-			# 	new_temp_one = temp_one.numpy().flatten()
-			# 	new_temp_two = temp_two.numpy().flatten()
-				
-
-			# 	# print(new_temp_one)
-			# 	cka_from_features12 = functions.model_similarity_cka(new_temp_one, new_temp_two)
-				
-			# 	print('Linear CKA G1 and G2 : {:.5f}'.format(cka_from_features12))
-
-			#########################################################################
 
 		if round < 3:
 			self.w_local_list = w_local_list
@@ -374,45 +342,27 @@ class DFL_unit(Wireless):
 
 		
 		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
-		# aggregrated_model1 = functions.fed_avg(zero_model1, w_local_list[0:len(self.groups[0])], configurations.N)
-		# aggregrated_model2 = functions.fed_avg(zero_model2, w_local_list[len(self.groups[0]):len(self.groups[0])+len(self.groups[1])], configurations.N)
-		# print(len(w_local_list))
-		# print(len(w_local_list[::len(w_local_list)-1]))
-		# print(len(w_local_list[len(w_local_list)-2:len(w_local_list)-1]))
-
+		
 		aggregrated_model1 = functions.fed_avg(zero_model1, w_local_list[::len(w_local_list)-1], configurations.N_phi*len(w_local_list[::len(w_local_list)-1]))
 		aggregrated_model2 = functions.fed_avg(zero_model2, w_local_list[len(w_local_list)-2:len(w_local_list)-1], configurations.N_phi*len(w_local_list[len(w_local_list)-2:len(w_local_list)-1]))
 		
-		# self.uninet.load_state_dict(aggregrated_model) w_local_list[1]
 		self.uninet1.load_state_dict(aggregrated_model1)
 		self.uninet2.load_state_dict(aggregrated_model2)
-
-		# self.uninet1.load_state_dict(w_local_list[0][0])
-		# self.uninet2.load_state_dict(w_local_list[1][0]) #determines all
 
 		return aggregrated_model1, aggregrated_model2
 
 	def test(self, r):
 
-		# first group
 		self.uninet1.eval()
 		test_loss = 0
 		correct = 0
 		total = 0
 		print('++++++++++++++++++Test loader 1: ')
-		tag0 = []
-		tag2 = []
-		tag3 = []
-
-		mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4, 5: 0, 6: 1, 7: 6, 8: 8} 
-		# mapping = {0: 0, 1: 1, 2: 6}
-		other_flag = True
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[0])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet1(inputs)
-				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
 				mapped_targets = targets
 				loss = self.criterion(outputs, mapped_targets)
 
@@ -420,19 +370,7 @@ class DFL_unit(Wireless):
 				_, predicted = outputs.max(1)
 				total += mapped_targets.size(0)
 				correct += predicted.eq(mapped_targets).sum().item()
-		# 		if other_flag:
-		# 			other_flag = False
-		# 			tag0.append(targets)
-		# 			tag2.append(mapped_targets)
-		# 			tag3.append(predicted)
-				
-
-				
-
-		# print(tag0)
-		# print(tag2)
-		# print(tag3)
-				
+		
 		acc1 = 100.*correct/total
 		logger.info('Test Accuracy (Group 1): {}'.format(acc1))
 
@@ -446,16 +384,9 @@ class DFL_unit(Wireless):
 		correct = 0
 		total = 0
 		print('++++++++++++++++++Test loader 2: ')
-		tag0 = []
-		tag2 = []
-		tag3 = []
-		mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9, 5: 8, 6: 9, 7: 7, 8: 2}
-		# mapping = {0: 3, 1: 5, 2: 7}
-
-		other_flag = True
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[1])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet2(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
@@ -466,22 +397,9 @@ class DFL_unit(Wireless):
 				_, predicted = outputs.max(1)
 				total += mapped_targets.size(0)
 				correct += predicted.eq(mapped_targets).sum().item()
-				# if other_flag:
-				# 	other_flag = False
-				# 	tag0.append(targets)
-				# 	tag2.append(mapped_targets)
-				# 	tag3.append(predicted)
-				
-
-				
-
-		# print(tag0)
-		# print(tag2)
-		# print(tag3)
 		acc2 = 100.*correct/total
 		logger.info('Test Accuracy (Group 2): {}'.format(acc2))
 
-		# Save checkpoint.
 		torch.save(self.uninet2.state_dict(), './'+ configurations.model_name +'2.pth')
 
 		
@@ -498,10 +416,8 @@ class DFL_unit(Wireless):
 		total = 0
 		print('++++++++++++++++++Test loader 1: ')
 
-		mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4, 5: 0, 6: 1, 7: 6, 8: 8} 
-
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[0])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
@@ -523,11 +439,9 @@ class DFL_unit(Wireless):
 		correct = 0
 		total = 0
 		print('++++++++++++++++++Test loader 2: ')
-	
-		mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9, 5: 8, 6: 9, 7: 7, 8: 2}
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[1])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)

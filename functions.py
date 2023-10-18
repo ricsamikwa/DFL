@@ -450,8 +450,9 @@ def cka(gram_x, gram_y, debiased=False):
   return scaled_hsic / (normalization_x * normalization_y)
 
 
-def create_custom_cifar10_dataloader(selected_classes, samples_per_class, batch_size=64):
+def create_custom_cifar10_dataloader(selected_classes, samples_per_class, train=False):
     # Define data transformations (you can customize these as needed)
+    batch_size=64
     transform = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -460,7 +461,7 @@ def create_custom_cifar10_dataloader(selected_classes, samples_per_class, batch_
     ])
 
     # Download the CIFAR-10 dataset and apply transformations
-    train_dataset = torchvision.datasets.CIFAR10(root=dataset_path, train=False,
+    train_dataset = torchvision.datasets.CIFAR10(root=dataset_path, train=train,
                                                  download=True, transform=transform)
 
     # Initialize lists to store selected data and labels

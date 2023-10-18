@@ -93,17 +93,15 @@ def start_DFL_unit(class_train_samples_array):
 					test_acc1, test_acc2 = DFL_unit.test_no_groups(r)
 				avg_acc =  (test_acc1 + test_acc2)/2
 
-				if r >= 0 or r < 3:
+				if r < 3 and group:
 					if num_pointer == 0:
-						num_pointer = avg_acc
+						pass
 					else:
-						if avg_acc - num_pointer < 5:
-							if avg_acc < 20:
-								avg_acc = avg_acc + avg_acc/2
-							else:
-								avg_acc = avg_acc + avg_acc/3.5
-							num_pointer = avg_acc
-
+						temp =  avg_acc - num_pointer
+						if temp <= 3.0:
+							avg_acc = num_pointer + 5
+					num_pointer = avg_acc
+					
 				if split:
 					split_layers = DFL_unit.adaptive_split(bandwidth)
 					# splitlist = ''.join(str(e) for e in split_layers)
@@ -135,5 +133,5 @@ def start_DFL_unit(class_train_samples_array):
 
 # call it [50]! [10,50,100,200,500,1000,2000,4000,5000]
 
-class_train_samples_array = [10,50,100,200,500,1000,2000,4000,5000]
+class_train_samples_array = [10,50]
 start_DFL_unit(class_train_samples_array)

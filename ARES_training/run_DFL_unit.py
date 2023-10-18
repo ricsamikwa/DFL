@@ -99,12 +99,12 @@ for r in range(configurations.R):
 	else:
 		split_layers = configurations.split_layer
 		if group:
-			filename = 'DFL_unit_c_10.csv'
+			filename = 'DFL_unit_c_100.csv'
 		else:
-			filename = 'DFL_unit_n_10.csv'
+			filename = 'DFL_unit_n_100.csv'
 
 	# Here to start saving stuff
-	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:
+	with open(configurations.home +'/slogs/new/'+filename,'a', newline='') as file:
 		writer = csv.writer(file)
 		writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
     

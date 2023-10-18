@@ -462,7 +462,7 @@ def create_custom_cifar10_dataloader(selected_classes, samples_per_class, train=
 
     # Download the CIFAR-10 dataset and apply transformations
     train_dataset = torchvision.datasets.CIFAR10(root=dataset_path, train=train,
-                                                 download=True, transform=transform)
+                                                 download=False, transform=transform)
 
     # Initialize lists to store selected data and labels
     selected_data = []

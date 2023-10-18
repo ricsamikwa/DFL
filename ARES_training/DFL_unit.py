@@ -74,7 +74,7 @@ class DFL_unit(Wireless):
 		######################################################################
 
 		selected_classes1 = [0, 5, 7, 2, 4, 8, 1, 6] #[0, 5, 7] #  # For example, classes 0, 1, and 2
-		samples_per_class = 10  # Adjust this as needed
+		samples_per_class = 100  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class)
 
 		self.testloader1 = custom_dataloader
@@ -151,6 +151,7 @@ class DFL_unit(Wireless):
 		if offload or first:
 			self.split_layers = split_layers
 			self.nets = {}
+			# self.nets_client = {}
 			self.optimizers= {}
 			for i in range(len(split_layers)):
 				client_ip = configurations.CLIENTS_LIST[i]
@@ -166,16 +167,15 @@ class DFL_unit(Wireless):
 					#   momentum=0.9)
 				else:
 					self.nets[client_ip] = functions.get_model('Client', self.model_name, split_layers[i], self.device, configurations.model_cfg)
-					
+					# self.nets_client[client_ip] = functions.get_model('Client', self.model_name, split_layers[i], self.device, configurations.model_cfg)
+
 				self.optimizers[client_ip] = optim.SGD(self.nets[client_ip].parameters(), lr=LR,momentum=0.9)
 					
 			self.criterion = nn.CrossEntropyLoss()
 
-		
-		# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
-		# for i in self.client_socks:
-		# 	self.send_msg(self.client_socks[i], msg)
-
+		for i in range(len(split_layers)):
+			client_ip = configurations.CLIENTS_LIST[i]
+			self.nets[client_ip].load_state_dict(self.uninet.state_dict())
 
 	def train(self, thread_number, client_ips):
 		

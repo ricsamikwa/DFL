@@ -62,9 +62,9 @@ def start_DFL_unit(class_train_samples_array):
 				logger.info('FL Training')
 
 			if group:
-				filename = 'DFL_unit_3_'+str(class_train_samples)+'_c.csv'
+				filename = 'DFL_unit_5_'+str(class_train_samples)+'_c.csv'
 			else:
-				filename = 'DFL_unit_3_'+str(class_train_samples)+'_n.csv'
+				filename = 'DFL_unit_5_'+str(class_train_samples)+'_n.csv'
 
 			num_pointer = 0
 
@@ -133,5 +133,5 @@ def start_DFL_unit(class_train_samples_array):
 
 # call it [50]! [10,50,100,200,500,1000,2000,4000,5000]
 
-class_train_samples_array = [10,50]
+class_train_samples_array = [10,50,100,200,500,1000,2000,4000,5000]
 start_DFL_unit(class_train_samples_array)

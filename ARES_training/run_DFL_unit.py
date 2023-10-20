@@ -62,9 +62,9 @@ def start_DFL_unit(class_train_samples_array):
 				logger.info('FL Training')
 
 			if group:
-				filename = 'DFL_unit_5_'+str(class_train_samples)+'_c.csv'
+				filename = 'DFL_unit_8_'+str(class_train_samples)+'_c.csv'
 			else:
-				filename = 'DFL_unit_5_'+str(class_train_samples)+'_n.csv'
+				filename = 'DFL_unit_8_'+str(class_train_samples)+'_n.csv'
 
 			num_pointer = 0
 

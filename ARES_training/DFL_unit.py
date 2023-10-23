@@ -62,14 +62,14 @@ class DFL_unit(Wireless):
 
 		#####################################CIPHER10#################################
 
-		selected_classes1 = [0, 5, 7, 2, 4, 8, 1, 6] #[0, 5, 7, 2, 4, 8, 1, 6] [0, 5, 7, 2, 4] # 
+		selected_classes1 = [0, 1, 2, 3, 4, 5, 6] #[0, 5, 7, 2, 4, 8, 1, 6] [0, 5, 7, 2, 4] # 
 		samples_per_class = 1000  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class)
 
 		self.testloaders[0] = custom_dataloader
 		
 	
-		selected_classes2 =[0, 5, 7, 2, 4, 8, 1, 6] #[0, 1, 6, 8, 9, 3, 5, 7] [1, 6, 8, 9, 3]  
+		selected_classes2 = [0, 1, 2, 3, 7, 8, 9] #[0, 1, 6, 8, 9, 3, 5, 7] [1, 6, 8, 9, 3]  
 		
 		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes2, samples_per_class)
 

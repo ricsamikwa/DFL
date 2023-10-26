@@ -2,6 +2,7 @@ ARES_trainingRES-Things/
 BenchmarkingRES-Things/
 datasets/
 data/
+cinic/
 __pycache__/
 *.py[cod]
 *$py.class

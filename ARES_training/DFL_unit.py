@@ -114,14 +114,14 @@ class DFL_unit(Wireless):
 		
 		#################################################MNIST#####################
 
-		selected_classes1 = [0, 5, 7] #[0, 5, 7, 2, 4, 8, 1, 6]  #  # For example, classes 0, 1, and 2
+		selected_classes1 = [0, 1, 6, 8, 9, 3, 5, 7] #[0, 5, 7, 2, 4, 8, 1, 6]  # [0, 5, 7]  # For example, classes 0, 1, and 2
 		samples_per_class = 1000  # Adjust this as needed
 		custom_dataloader = functions.create_custom_cinic10_dataloader(selected_classes1, samples_per_class)
 
 		self.testloaders[0] = custom_dataloader
 		
 	
-		selected_classes2 = [1, 6, 8] #[0, 1, 6, 8, 9, 3, 5, 7]   # For example, classes 0, 1, and 2
+		selected_classes2 = [0, 1, 6, 8, 9, 3, 5, 7] #[0, 1, 6, 8, 9, 3, 5, 7] [1, 6, 8]  # For example, classes 0, 1, and 2
 		
 		custom_dataloader = functions.create_custom_cinic10_dataloader(selected_classes2, samples_per_class)
 

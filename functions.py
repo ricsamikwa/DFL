@@ -533,6 +533,50 @@ def create_custom_mnist_dataloader(selected_classes, samples_per_class, train=Tr
 
     return custom_dataloader
 
+def create_custom_cinic10_dataloader(selected_classes, samples_per_class, train=False):
+    # Define data transformations (you can customize these as needed)
+    batch_size = 64
+    transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.47889522, 0.47227842, 0.43047404), (0.24205776, 0.23828046, 0.25874835))
+    ])
+
+    if train:
+         dataset_path = './cinic/CINIC-10/train'
+    else:
+         dataset_path = './cinic/CINIC-10/test'
+    # Load the CINIC-10 dataset and apply transformations
+    cinic10_dataset = torchvision.datasets.ImageFolder(root=dataset_path, transform=transform)
+
+    # Initialize lists to store selected data and labels
+    selected_data = []
+    selected_labels = []
+
+    # Iterate through the dataset to select the desired samples
+    for data, label in cinic10_dataset:
+        if label in selected_classes and selected_labels.count(label) < samples_per_class:
+            selected_data.append(data)
+            selected_labels.append(label)
+
+    # Create a custom dataset using the selected data and labels
+    class CustomCINIC10Dataset(torch.utils.data.Dataset):
+        def __init__(self, data, labels):
+            self.data = data
+            self.labels = labels
+
+        def __len__(self):
+            return len(self.data)
+
+        def __getitem__(self, idx):
+            sample, label = self.data[idx], self.labels[idx]
+            return sample, label
+
+    custom_dataset = CustomCINIC10Dataset(selected_data, selected_labels)
+    custom_dataloader = torch.utils.data.DataLoader(custom_dataset, batch_size=batch_size, shuffle=True)
+
+    return custom_dataloader
 
 def generate_non_iid_distribution(alpha, num_classes, total_samples):
     """

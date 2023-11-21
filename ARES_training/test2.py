@@ -79,7 +79,7 @@ distance_matrix = 1 - similarity_matrix
 
 # Create DBSCAN object and fit the data
 eps = 0.3  # Epsilon parameter to define the neighborhood
-min_samples = 2  # Minimum number of samples in a neighborhood to form a cluster
+min_samples = 1  # Minimum number of samples in a neighborhood to form a cluster
 dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='precomputed')
 dbscan.fit(distance_matrix)
 

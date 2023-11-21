@@ -10,6 +10,8 @@ import tqdm
 import time
 import random
 import numpy as np
+from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
 import math
 import logging
 from ARESopt.ARES_optimisation import BenchClient
@@ -33,6 +35,11 @@ class DFL_unit(Wireless):
 		self.model_name = model_name
 		self.semaphore = 0
 
+		eps = 0.3  
+		min_samples = 1  
+		n_clusters = 3
+
+
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 		if group:
 			self.uninet1 = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
@@ -45,6 +52,10 @@ class DFL_unit(Wireless):
 		self.trainloaders = {}
 
 		self.testloaders = {}
+
+		
+		self.dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='precomputed')
+		self.kmeans = KMeans(n_clusters=n_clusters, random_state=42)
 
 		
 	def prepare_everything(self, class_train_samples, group):
@@ -60,8 +71,17 @@ class DFL_unit(Wireless):
 		print("Selected Classes:", selected_classes_h)
 		print("Samples Per Class:", samples_per_class)
 
+	
 		#####################################CIPHER10#################################
+		similarity_matrix = np.array([
+			[1.0, 0.8, 0.3, 0.2, 0.6],
+			[0.8, 1.0, 0.4, 0.1, 0.7],
+			[0.3, 0.4, 1.0, 0.9, 0.2],
+			[0.2, 0.1, 0.9, 1.0, 0.4],
+			[0.6, 0.7, 0.2, 0.4, 1.0]
+		])
 
+		# similarity_matrix = samples_per_class
 		# selected_classes1 = [0, 1, 2, 3, 4, 5, 6] #[0, 5, 7, 2, 4, 8, 1, 6] [0, 5, 7, 2, 4] # 
 		# samples_per_class = 1000  # Adjust this as needed
 		# custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class)
@@ -111,8 +131,22 @@ class DFL_unit(Wireless):
 		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes1, samples_per_class,True)
 		# 		else:
 		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes2, samples_per_class,True)
-		
-		#################################################MNIST#####################
+		###########################################################################
+
+		distance_matrix = 1 - similarity_matrix
+		self.dbscan.fit(distance_matrix)
+
+		# Retrieve the labels and core samples
+		labels = self.dbscan.labels_
+		core_samples = np.zeros_like(labels, dtype=bool)
+		core_samples[self.dbscan.core_sample_indices_] = True
+
+		# Number of clusters in labels, ignoring noise if present
+		n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+		print("Number of clusters:", n_clusters)
+
+		#################################################CINIC#####################
+
 
 		selected_classes1 = [0, 5, 7, 2, 4] #[0, 5, 7, 2, 4, 8, 1, 6]  # [0, 5, 7]  # For example, classes 0, 1, and 2
 		samples_per_class = 8000  # Adjust this as needed

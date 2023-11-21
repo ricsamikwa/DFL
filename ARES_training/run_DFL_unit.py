@@ -62,9 +62,9 @@ def start_DFL_unit(class_train_samples_array):
 				logger.info('FL Training')
 
 			if group:
-				filename = 'cinic_DFL_unit_5_'+str(class_train_samples)+'_c_m_temp.csv'
+				filename = 'cinic_DFL_unit_5_'+str(class_train_samples)+'_c.csv'
 			else:
-				filename = 'cinic_DFL_unit_5_'+str(class_train_samples)+'_n_m_temp.csv'
+				filename = 'cinic_DFL_unit_5_'+str(class_train_samples)+'_n.csv'
 
 			num_pointer = 0
 
@@ -109,9 +109,10 @@ def start_DFL_unit(class_train_samples_array):
 				else:
 					split_layers = configurations.split_layer
 					
-				with open(configurations.home +'/slogs/new/'+filename,'a', newline='') as file:
-					writer = csv.writer(file)
-					writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
+				# writting to file here
+				# with open(configurations.home +'/slogs/new/'+filename,'a', newline='') as file:
+				# 	writer = csv.writer(file)
+				# 	writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])
 				
 				logger.info('Round Finish')
 				logger.info('==> Round Training Time: {:}'.format(trianing_time))
@@ -133,5 +134,5 @@ def start_DFL_unit(class_train_samples_array):
 
 # call it [50]! [10,50,100,200,500,1000,2000,4000,5000]
 
-class_train_samples_array = [100]
+class_train_samples_array = [50]
 start_DFL_unit(class_train_samples_array)

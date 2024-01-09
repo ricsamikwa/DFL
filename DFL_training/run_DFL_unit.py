@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 import sys
 sys.path.append('../')
-from ARES_training.DFL_unit import DFL_unit
+from DFL_training.DFL_unit import DFL_unit
 import configurations
 import functions
 

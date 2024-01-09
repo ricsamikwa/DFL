@@ -14,7 +14,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.cluster import KMeans
 import math
 import logging
-from ARESopt.ARES_optimisation import BenchClient
+from RES_DFL_opt.ARES_optimisation import BenchClient
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 

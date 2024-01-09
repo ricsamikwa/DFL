@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 import sys
 sys.path.append('../')
-from ARES_training.Device import Client
+from DFL_training.Device import Client
 import configurations
 import functions
 # from threading import Thread

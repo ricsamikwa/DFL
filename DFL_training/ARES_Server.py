@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 import sys
 sys.path.append('../')
-from ARES_training.Edge_Server import Edge_Server
+from DFL_training.Edge_Server import Edge_Server
 import configurations
 import functions
 

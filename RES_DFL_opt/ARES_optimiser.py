@@ -10,7 +10,7 @@ import random
 import numpy as np
 import sys
 sys.path.append('../')
-from DFL_ARESopt.ARES_optimisation import BenchClient
+from RES_DFL_opt.ARES_optimisation import BenchClient
 
 import logging
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')

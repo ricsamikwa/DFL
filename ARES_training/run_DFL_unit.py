@@ -14,10 +14,6 @@ from ARES_training.DFL_unit import DFL_unit
 import configurations
 import functions
 
-# parser=argparse.ArgumentParser()
-# parser.add_argument('--split', help='ARES SPLIT', type= functions.str2bool, default= False)
-# args=parser.parse_args()
-
 # Create the ArgumentParser object
 parser = argparse.ArgumentParser()
 
@@ -122,9 +118,7 @@ def start_DFL_unit(class_train_samples_array):
 				
 				if configurations.split_layer[0] == -1:
 					break
-				######### temp comment
-				# if r > 49:
-				# 	LR = configurations.LR * 0.1
+				
 				if group:
 					DFL_unit.reinitialize(split_layers, split, r, first, LR)
 				else:

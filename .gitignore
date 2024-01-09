@@ -3,7 +3,7 @@ BenchmarkingRES-Things/
 datasets/
 data/
 cinic/
-logs/
+slogs/
 __pycache__/
 *.py[cod]
 *$py.class

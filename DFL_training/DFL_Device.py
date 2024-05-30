@@ -5,6 +5,8 @@ import csv
 import multiprocessing
 import os
 import argparse
+import subprocess
+import re
 
 import logging
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,7 +23,38 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--split', help='ARES SPLIT', type= functions.str2bool, default= False)
 args=parser.parse_args()
 
+
+def get_any_ip_address():
+    try:
+        # Run the `ip` command to get all interface details
+        result = subprocess.check_output(['ip', 'addr'], stderr=subprocess.STDOUT, universal_newlines=True)
+        
+        # Use regex to find all IPv4 addresses
+        matches = re.findall(r'inet (\d+\.\d+\.\d+\.\d+)', result)
+        if matches:
+            for ip in matches:
+                # Skip loopback address
+                if not ip.startswith("127."):
+                    return ip
+            print("No non-loopback IP address found")
+            return None
+        else:
+            print("No IP address found")
+            return None
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to get network interface details. Error: {e.output.strip()}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+# Get any IP address of the device
+ip_address = get_any_ip_address()
+
 hostname = socket.gethostname().replace('-desktop', '')
+if ip_address== '192.168.1.51':
+	hostname = 'nano12' # setting specific
+
 ip_address = configurations.HOST2IP[hostname]
 index = configurations.CLIENTS_CONFIG[ip_address]
 datalen = configurations.N / configurations.K

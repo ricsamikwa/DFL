@@ -10,7 +10,7 @@ import tqdm
 import time
 import random
 import numpy as np
-from ARESopt.ARES_optimisation import BenchClient
+from RES_DFL_opt.ARES_optimisation import BenchClient
 import math
 import logging
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -25,9 +25,9 @@ import configurations
 np.random.seed(0)
 torch.manual_seed(0)
 
-class DFL_unit(Wireless):
+class Edge_Server(Wireless):
 	def __init__(self, index, ip_address, server_port, model_name,group):
-		super(DFL_unit, self).__init__(index, ip_address)
+		super(Edge_Server, self).__init__(index, ip_address)
 		self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 		self.port = server_port
 		self.model_name = model_name

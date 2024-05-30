@@ -43,8 +43,8 @@ def start_DFL_unit(class_train_samples_array):
 			LR = configurations.LR
 			# split = args.split
 			first = True 
-			# ip_address = '192.168.1.38'
-			DFL_unit.prepare_everything(class_train_samples, group)
+			# ip_address = '192.168.1.38' # if needed
+			DFL_unit.prepare(class_train_samples, group)
 
 			if group:
 				DFL_unit.initialize(configurations.split_layer, split,-1, first, LR)
@@ -100,8 +100,6 @@ def start_DFL_unit(class_train_samples_array):
 					
 				if split:
 					split_layers = DFL_unit.adaptive_split(bandwidth)
-					# splitlist = ''.join(str(e) for e in split_layers)
-					# filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
 				else:
 					split_layers = configurations.split_layer
 					
@@ -126,7 +124,6 @@ def start_DFL_unit(class_train_samples_array):
 
 				logger.info('==> Reinitialization Finish')
 
-# call it [50]! [10,50,100,200,500,1000,2000,4000,5000]
 
-class_train_samples_array = [50]
+class_train_samples_array = [500]
 start_DFL_unit(class_train_samples_array)

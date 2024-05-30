@@ -14,10 +14,6 @@ from DFL_training.Edge_Server import Edge_Server
 import configurations
 import functions
 
-# parser=argparse.ArgumentParser()
-# parser.add_argument('--split', help='ARES SPLIT', type= functions.str2bool, default= False)
-# args=parser.parse_args()
-
 # Create the ArgumentParser object
 parser = argparse.ArgumentParser()
 
@@ -48,16 +44,8 @@ else:
 	Edge_Server.initialize_no_groups(configurations.split_layer, split,-1, first, LR)
 first = False
 
-#if split:
-	#handle changes of split layers
-
 if split:
 	logger.info('DFL Training')
-else:
-	logger.info('FL Training')
-
-# res = {}
-# res['trianing_time'], res['test_acc_record'], res['bandwidth_record'] = [], [], []
 
 for r in range(configurations.R):
 	logger.info('====================================>')
@@ -84,15 +72,9 @@ for r in range(configurations.R):
 		test_acc1, test_acc2 = Edge_Server.test_no_groups(r)
 	avg_acc =  (test_acc1 + test_acc2)/2
 
-	#temp item - WALK - senstive
-	# config.split_layer[0] = config.split_layer[0] - 1
-	
-    #++++++++++++++++++++++++++++++++++++++
+
 
 	if split:
-		# ADAPT SPLIT LAYERS HERE!
-		# split_layers = [2]
-		# config.split_layer = split_layers
 		split_layers = Edge_Server.adaptive_split(bandwidth)
 		splitlist = ''.join(str(e) for e in split_layers)
 		filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
@@ -103,7 +85,6 @@ for r in range(configurations.R):
 		else:
 			filename = 'DFL_non_IID_no_groups_c_8_100.csv'
 
-	# Here to start saving stuff
 	with open(configurations.home +'/slogs/'+filename,'a', newline='') as file:
 		writer = csv.writer(file)
 		writer.writerow([ trianing_time,test_acc1,test_acc2,avg_acc])

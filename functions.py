@@ -544,9 +544,9 @@ def create_custom_cinic10_dataloader(selected_classes, samples_per_class, train=
     ])
 
     if train:
-         dataset_path = './cinic/CINIC-10/train'
+         dataset_path = '../datasets/cinic/CINIC-10/train'
     else:
-         dataset_path = './cinic/CINIC-10/test'
+         dataset_path = '../datasets/cinic/CINIC-10/test'
     # Load the CINIC-10 dataset and apply transformations
     cinic10_dataset = torchvision.datasets.ImageFolder(root=dataset_path, transform=transform)
 

@@ -22,7 +22,7 @@ import sys
 sys.path.append('../')
 from Wireless import *
 import functions
-import configurations
+import configurations 
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -37,8 +37,6 @@ class DFL_unit(Wireless):
 
 		eps = 0.3  
 		min_samples = 1  
-		n_clusters = 3
-
 
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 		if group:
@@ -52,88 +50,24 @@ class DFL_unit(Wireless):
 		self.trainloaders = {}
 
 		self.testloaders = {}
-
 		
 		self.dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='precomputed')
-		self.kmeans = KMeans(n_clusters=n_clusters, random_state=42)
 
 		
-	def prepare_everything(self, class_train_samples, group):
+	def prepare(self, class_train_samples, group):
 
 		split_layers = configurations.CLIENTS_LIST
 
-		alpha = 0.5  # Adjust the level of non-IIDness (0 for IID, 1 for highly non-IID)
-		num_classes = 10  # Total number of classes in CIFAR-10
-		total_samples = 50000  # Total number of samples to be distributed
+		alpha = 0.1  
+		num_classes = 10 
+		total_samples = 50000 
 
-		selected_classes_h, samples_per_class = functions.generate_non_iid_distribution(alpha, num_classes, total_samples)
+		selected_classes_h, samples_per_clas = functions.generate_non_iid_distribution(alpha, num_classes, total_samples)
 
-		print("Selected Classes:", selected_classes_h)
-		print("Samples Per Class:", samples_per_class)
+		# print("Selected Classes:", selected_classes_h)
+		print("Samples Per Class:", samples_per_clas)
 
-	
-		#####################################CIPHER10#################################
-		similarity_matrix = np.array([
-			[1.0, 0.8, 0.3, 0.2, 0.6],
-			[0.8, 1.0, 0.4, 0.1, 0.7],
-			[0.3, 0.4, 1.0, 0.9, 0.2],
-			[0.2, 0.1, 0.9, 1.0, 0.4],
-			[0.6, 0.7, 0.2, 0.4, 1.0]
-		])
-
-		# similarity_matrix = samples_per_class
-		# selected_classes1 = [0, 1, 2, 3, 4, 5, 6] #[0, 5, 7, 2, 4, 8, 1, 6] [0, 5, 7, 2, 4] # 
-		# samples_per_class = 1000  # Adjust this as needed
-		# custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class)
-
-		# self.testloaders[0] = custom_dataloader
-		
-	
-		# selected_classes2 = [0, 1, 2, 3, 7, 8, 9] #[0, 1, 6, 8, 9, 3, 5, 7] [1, 6, 8, 9, 3]  
-		
-		# custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes2, samples_per_class)
-
-		# self.testloaders[1] = custom_dataloader
-		
-		# samples_per_class = class_train_samples
-		# configurations.N_phi = samples_per_class * len(selected_classes2)
-
-		# for i in range(len(split_layers)):
-		# 		client_ip = configurations.CLIENTS_LIST[i]
-
-		# 		if i == 0 or i ==2:
-		# 			self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(selected_classes1, samples_per_class,True)
-		# 		else:
-		# 			self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(selected_classes2, samples_per_class,True)
-		
-		# #################################################MNIST#####################
-
-		# selected_classes1 = [0, 1, 2, 3, 4, 5, 6, 7] #[0, 5, 7, 2, 4, 8, 1, 6]  #  # For example, classes 0, 1, and 2
-		# samples_per_class = 1000  # Adjust this as needed
-		# custom_dataloader = functions.create_custom_mnist_dataloader(selected_classes1, samples_per_class)
-
-		# self.testloaders[0] = custom_dataloader
-		
-	
-		# selected_classes2 =[0, 1, 2, 3, 4, 5, 6, 7] #[0, 1, 6, 8, 9, 3, 5, 7]   # For example, classes 0, 1, and 2
-		
-		# custom_dataloader = functions.create_custom_mnist_dataloader(selected_classes2, samples_per_class)
-
-		# self.testloaders[1] = custom_dataloader
-		
-		# samples_per_class = class_train_samples
-		# configurations.N_phi = samples_per_class * len(selected_classes2)
-
-		# for i in range(len(split_layers)):
-		# 		client_ip = configurations.CLIENTS_LIST[i]
-
-		# 		if i == 0 or i ==2:
-		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes1, samples_per_class,True)
-		# 		else:
-		# 			self.trainloaders[client_ip] = functions.create_custom_mnist_dataloader(selected_classes2, samples_per_class,True)
-		###########################################################################
-
-		distance_matrix = 1 - similarity_matrix
+		distance_matrix = 1 - configurations.similarity_matrix
 		self.dbscan.fit(distance_matrix)
 
 		# Retrieve the labels and core samples
@@ -141,36 +75,30 @@ class DFL_unit(Wireless):
 		core_samples = np.zeros_like(labels, dtype=bool)
 		core_samples[self.dbscan.core_sample_indices_] = True
 
-		# Number of clusters in labels, ignoring noise if present
+		# Number of clusters in labels
 		n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-		print("Number of clusters:", n_clusters)
+		# print("Number of clusters:", n_clusters)
 
-		#################################################CINIC#####################
-
-
-		selected_classes1 = [0, 5, 7, 2, 4] #[0, 5, 7, 2, 4, 8, 1, 6]  # [0, 5, 7]  # For example, classes 0, 1, and 2
-		samples_per_class = 8000  # Adjust this as needed
-		custom_dataloader = functions.create_custom_cinic10_dataloader(selected_classes1, samples_per_class)
+		samples_per_class = configurations.samples_per_class  
+		custom_dataloader = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, samples_per_class)
 
 		self.testloaders[0] = custom_dataloader
 		
-	
-		selected_classes2 = [1, 6, 8, 9, 3]  #[0, 1, 6, 8, 9, 3, 5, 7] [1, 6, 8]  # For example, classes 0, 1, and 2
-		
-		custom_dataloader = functions.create_custom_cinic10_dataloader(selected_classes2, samples_per_class)
+			
+		custom_dataloader = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, samples_per_class)
 
 		self.testloaders[1] = custom_dataloader
 		
 		samples_per_class = class_train_samples
-		configurations.N_phi = samples_per_class * len(selected_classes2)
+		configurations.N_phi = samples_per_class * len(configurations.selected_classes2)
 
 		for i in range(len(split_layers)):
 				client_ip = configurations.CLIENTS_LIST[i]
 
 				if i == 0 or i ==2:
-					self.trainloaders[client_ip] = functions.create_custom_cinic10_dataloader(selected_classes1, samples_per_class,True)
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, samples_per_class,True)
 				else:
-					self.trainloaders[client_ip] = functions.create_custom_cinic10_dataloader(selected_classes2, samples_per_class,True)
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, samples_per_class,True)
 		
 		
 	def initialize(self, split_layers, offload,round, first, LR):
@@ -286,8 +214,7 @@ class DFL_unit(Wireless):
 			
 
 	def _thread_training_offloading(self, client_ip):
-		#issues here!!
-		# iteration = int((config.N / (config.K * config.B)))
+		
 		iteration = 50 
 		# logger.info(str(iteration) + ' iterations!!')
 		for i in range(iteration):
@@ -312,7 +239,6 @@ class DFL_unit(Wireless):
 		w_local_list =[]
 		
 		for i in range(len(client_ips)):
-			# msg = self.recv_msg(self.client_socks[client_ips[i]], 'MSG_SUB_WEIGHTS_CLIENT_TO_SERVER')
 			if configurations.split_layer[i] != (configurations.model_len -1):
 				# w_local = (functions.concat_weights(self.uninet.state_dict(),msg[1],self.nets[client_ips[i]].state_dict()),configurations.N / configurations.K)
 				# w_local_list.append(w_local)
@@ -417,8 +343,6 @@ class DFL_unit(Wireless):
 		test_loss = 0
 		correct = 0
 		total = 0
-		print('++++++++++++++++++Test loader 1: ')
-
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[0])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -432,7 +356,7 @@ class DFL_unit(Wireless):
 				correct += predicted.eq(mapped_targets).sum().item()
 		
 		acc1 = 100.*correct/total
-		logger.info('Test Accuracy (Group 1): {}'.format(acc1))
+		logger.info('Test Accuracy (TestLoader 1): {}'.format(acc1))
 
 		# Save checkpoint.
 		torch.save(self.uninet1.state_dict(), './'+ configurations.model_name +'1.pth')
@@ -443,7 +367,6 @@ class DFL_unit(Wireless):
 		test_loss = 0
 		correct = 0
 		total = 0
-		print('++++++++++++++++++Test loader 2: ')
 
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[1])):
@@ -458,7 +381,7 @@ class DFL_unit(Wireless):
 				total += mapped_targets.size(0)
 				correct += predicted.eq(mapped_targets).sum().item()
 		acc2 = 100.*correct/total
-		logger.info('Test Accuracy (Group 2): {}'.format(acc2))
+		logger.info('Test Accuracy (TestLoader 2): {}'.format(acc2))
 
 		torch.save(self.uninet2.state_dict(), './'+ configurations.model_name +'2.pth')
 
@@ -474,7 +397,6 @@ class DFL_unit(Wireless):
 		test_loss = 0
 		correct = 0
 		total = 0
-		print('++++++++++++++++++Test loader 1: ')
 
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[0])):
@@ -498,7 +420,6 @@ class DFL_unit(Wireless):
 		test_loss = 0
 		correct = 0
 		total = 0
-		print('++++++++++++++++++Test loader 2: ')
 
 		with torch.no_grad():
 			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloaders[1])):

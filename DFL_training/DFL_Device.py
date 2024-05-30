@@ -74,18 +74,14 @@ logger.info('Preparing Data.')
 cpu_count = multiprocessing.cpu_count()
 
 trainloader, classes= functions.get_local_dataloader_non_iid(index, cpu_count)
-print("+++++++++++++++++++++++classes")
-print(classes)
-# trainloader, classes= functions.get_local_dataloader(index, cpu_count)
 
 if split:
-	logger.info('ARES Training')
+	logger.info('DFL Training')
 else:
 	logger.info('Classic local Training')
 
 flag = False # Bandwidth control flag.
 
-# stop_power_flag = False
 
 def power_monitor_thread(stop):
 	power = 0
@@ -115,7 +111,6 @@ def power_monitor_thread(stop):
 def training_thread(LR):
 	# print(hostname[0:3])
 	# if hostname[0:4] == 'nano':
-	# 	# print('this is a nano')
 	# 	stop_threads = False
 	# 	t1 = Thread(target=power_monitor_thread, args =(lambda : stop_threads,))
 	# 	t1.start()
@@ -132,21 +127,6 @@ def training_thread(LR):
 		else:
 			filename = ''+ hostname+'_config_fdl.csv'
 
-		#   # current input
-		# with open('/sys/bus/i2c/drivers/ina3221x/6-0040/iio:device0/in_current0_input') as t:
-		#     current = ((t.read()))
-		#     print(current)
-
-		# # voltage 
-		# with open('/sys/bus/i2c/drivers/ina3221x/6-0040/iio:device0/in_voltage0_input') as t:
-		#     voltage = ((t.read()))
-		#     print(voltage)
-
-		# NO SAVING DATA ON DEVICE 
-
-		# with open(configurations.home + '/slogs/' + filename,'a', newline='') as file:
-		# 	writer = csv.writer(file)
-		# 	writer.writerow([network_speed,training_time_pr, training_time, average_time])
 
 		logger.info('ROUND: {} END'.format(r))
 		
@@ -157,8 +137,6 @@ def training_thread(LR):
 		s_time_rebuild = time.time()
 		if split:
 			configurations.split_layer = client.recv_msg(client.sock)[1]
-			#config.split_layer = [2]
-			# print(config.split_layer)
 
 		if r > 49:
 			LR = configurations.LR * 0.1

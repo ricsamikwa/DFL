@@ -158,9 +158,6 @@ class BenchClient(Wireless):
 	def reinitialize(self, split_layers, split, first, LR):
 		self.initialize(split_layers, split, first, LR)
 
-# def error_calculation():
-#     error_calc_time = 0.0001
-#     return error_calc_time
 
 	def transmission_layerwise_time(self, network_throughput):
 
@@ -170,22 +167,13 @@ class BenchClient(Wireless):
 			# ('D', 8*8*64, 128, 1, 64, 128*8*8*64), 
 			# ('C', 64, 64, 3, 64*8*8, 64*8*8*3*3*64), 
 			# ('D', 8*8*64, 128, 1, 64, 128*8*8*64), 
-			# ('D', 128, 10, 1, 10, 128*10)]
-
-		# now we multiply everything by 8 * 100 - "why?" Answer: 1 byte is 8 bits AND 100 is batch size 
-		
+			# ('D', 128, 10, 1, 10, 128*10)]		
 		forward_layerwise_data = [32*32*32*8*100, 32*16*16*8*100, 64*16*16*8*100, 64*8*8*8*100, 64*8*8*8*100, 128*8*100, 10*8*100]
 		backward_layerwise_data = [32*32*32*8*100, 32*16*16*8*100, 64*16*16*8*100, 64*8*8*8*100, 64*8*8*8*100, 128*8*100, 10*8*100]
 
 		forward_layerwise_latency = [element * (1/(network_throughput * 1000000)) for element in forward_layerwise_data]
-
-		# print(forward_layerwise_latency)
-		# const_forward_layerwise_latency = [0.3262598514556885, 0.5824382305145264, 0.13750505447387695, 0.13750505447387695, 0.6942946910858154, 0.10664844512939453]
-		# print(const_forward_layerwise_latency)
-		
 		backward_layerwise_latency = [element * (1/(network_throughput * 1000000)) for element in backward_layerwise_data]
 		# const_backward_layerwise_latency = [1.569196753501892, 0.6807714366912841, 0.3989624071121216, 0.3490042543411255, 0.09093882560729981, 0.0]
-		print("transmission latency "+str(backward_layerwise_latency))
 		# print(layerwise_latency)
 		return forward_layerwise_latency, backward_layerwise_latency
 
@@ -246,19 +234,13 @@ class BenchClient(Wireless):
 			if r > 49:
 				LR = configurations.LR * 0.1
 			
-			
-		
-		print("device_forward "+str(device_forward_splitwise_latency)+"\n server_forward "+str(server_forward_splitwise_latency)+"\ndevice_backward "+ str(device_backward_splitwise_latency)+ "\nserver_backward "+str(server_backward_splitwise_latency))
-		#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	
 		device_forward_splitwise_latency_temp = [0.009353160858154297, 0.01496434211730957, 0.019944190979003906, 0.02015913009643555, 0.043131608963012695, 0.107067930221557617, 0.12375044822693]
 		device_backward_splitwise_latency_temp = [0.01922104835510254, 0.011676549911499023, 0.016455078125, 0.028456230163574219, 0.022606611251831055, 0.090107507705688477, 0.0812466430664062]
 
-		#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		# # # pi 
 		# device_forward_splitwise_latency_temp = [0.8614792823791504, 0.9474797248840332, 1.447148323059082, 1.4670040607452393, 1.647247552871704, 1.7771625518798828, 1.8515172004699707]
 		# device_backward_splitwise_latency_temp = [0.4919867515563965, 0.5453286170959473, 1.5309937000274658, 1.4755029678344727, 1.9282042980194092, 2.0049049854278564, 2.091542959213257]
-		#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		
 		transmision_layerwise_latency, receiving_layerwise_latency = self.transmission_layerwise_time(throughput)
 		
@@ -287,7 +269,6 @@ class BenchClient(Wireless):
 		print("alpha: " + str(alpha))
 		total_training_time_array, total_energy_per_iter_array = self.training_time_energy(throughput)
 		
-		print("==============================")
 		print("total_training_time_array "+str(total_training_time_array)+"\n total_energy_per_iter_array "+str(total_energy_per_iter_array))
 		#normalisation
 		norm = np.linalg.norm(total_training_time_array)
@@ -296,13 +277,12 @@ class BenchClient(Wireless):
 		norm2 = np.linalg.norm(total_energy_per_iter_array)
 		normal_energy_per_iter_array = total_energy_per_iter_array/norm2
 		
-		print("==============================")
 		print(""+str(normal_training_time_array))
 		print(""+str(normal_energy_per_iter_array))
-		print("==============================")
-		print("training time argmin: "+ str(argmin(normal_training_time_array) + 1))
-		print("energy consump argmin: "+ str(argmin(normal_energy_per_iter_array) +1))
-		print("==============================")
+		print("====================")
+		print("training time : "+ str(argmin(normal_training_time_array) + 1))
+		print("energy consump : "+ str(argmin(normal_energy_per_iter_array) +1))
+		print("===================")
 
 		#scaling
 		scaled_normal_training_time_array = [element * alpha for element in normal_training_time_array]
@@ -311,9 +291,7 @@ class BenchClient(Wireless):
 		
 		optimisation_array = np.add(scaled_normal_training_time_array, scaled_normal_energy_per_iter_array)  
 
-		# print(optimisation_array)
 		
-		# axis 0 for now
 		result = argmin(optimisation_array, axis=0)
 		
 		return result

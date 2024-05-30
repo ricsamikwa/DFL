@@ -126,7 +126,6 @@ class DFL_unit(Wireless):
 				client_ip = configurations.CLIENTS_LIST[i]
 				self.nets[client_ip].load_state_dict(uninet.state_dict())
 		
-		# here we want the models to diverge intentinally
 		if round >= 0 and round < 3:
 			for i in range(len(split_layers)):
 				client_ip = configurations.CLIENTS_LIST[i]

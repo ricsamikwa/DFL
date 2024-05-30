@@ -52,29 +52,32 @@ class Edge_Server(Wireless):
 		self.w_local_list =[]
 
 		alpha = 0.1  
-		num_classes = 10  # Total number of classes in CIFAR-10
+		num_classes = 10 
 		total_samples = 50000  # Total number of samples to be distributed
 
 		selected_classes, samples_per_class = functions.generate_non_iid_distribution(alpha, num_classes, total_samples)
 
-		print("Selected Classes:", selected_classes)
+		# print("Selected Classes:", selected_classes)
 		print("Samples Per Class:", samples_per_class)
 
-		######################################################################
+		custom_dataloader = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, 1000)
 
-		selected_classes = [0, 5, 7, 2, 4, 8, 1, 6] #[0, 5, 7] #  # For example, classes 0, 1, and 2
-		samples_per_class = 1000  # Adjust this as needed
-		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
+		self.testloader[0] = custom_dataloader
 
-		self.testloader1 = custom_dataloader
 		
-	
-		selected_classes =[0, 1, 6, 8, 9, 3, 5, 7]# [1, 6, 8]   # For example, classes 0, 1, and 2
-		# samples_per_class = 500  # Adjust this as needed
-		custom_dataloader = functions.create_custom_cifar10_dataloader(selected_classes, samples_per_class)
+		custom_dataloader = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, 1000)
 
-		self.testloader2 = custom_dataloader
-		######################################################################
+		self.testloader[1] = custom_dataloader
+
+		configurations.N_phi = samples_per_class * len(configurations.selected_classes2)
+
+		for i in range(len(configurations.CLIENTS_LIST)):
+				client_ip = configurations.CLIENTS_LIST[i]
+
+				if i == 0 or i ==2:
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, samples_per_class,True)
+				else:
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, samples_per_class,True)
 
 	def initialize(self, split_layers, offload,round, first, LR):
 		if offload or first:
@@ -109,11 +112,9 @@ class Edge_Server(Wireless):
 			for p in range(len(self.groups)):
 				for m in range(len(self.groups[p])):
 					if p == 0:
-						print("Sending Model 1 to " + self.groups[p][m])
 						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet1.state_dict()]
 						self.send_msg(self.client_socks[self.groups[p][m]], msg)
 					else:
-						print("Sending Model 2 to " + self.groups[p][m])
 						msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet2.state_dict()]
 						self.send_msg(self.client_socks[self.groups[p][m]], msg)
 
@@ -191,10 +192,9 @@ class Edge_Server(Wireless):
 		pass
 
 	def _thread_training_offloading(self, client_ip):
-		#issues here!!
 		# iteration = int((config.N / (config.K * config.B)))
-		iteration = 150 # verify this number 50000/(5*100) = 100, but we have 50 iterations from the data ?
-		# logger.info(str(iteration) + ' iterations!!')
+		iteration = 150 
+
 		for i in range(iteration):
 			msg = self.recv_msg(self.client_socks[client_ip], 'MSG_INTERMEDIATE_ACTIVATIONS_CLIENT_TO_SERVER')
 			smashed_layers = msg[1]
@@ -329,7 +329,7 @@ class Edge_Server(Wireless):
 		total = 0
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader[0])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet1(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
@@ -359,7 +359,7 @@ class Edge_Server(Wireless):
 		other_flag = True
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader[1])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet2(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
@@ -384,15 +384,13 @@ class Edge_Server(Wireless):
 	
 	def test_no_groups(self, r):
 
-		# first group
 		self.uninet.eval()
 		test_loss = 0
 		correct = 0
 		total = 0
-		mapping = {0: 3, 1: 5, 2: 7, 3: 2, 4: 4, 5: 0, 6: 1, 7: 6, 8: 8} 
 
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader1)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader[0])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)
@@ -414,10 +412,8 @@ class Edge_Server(Wireless):
 		correct = 0
 		total = 0
 	
-		mapping = {0: 0, 1: 1, 2: 6, 3: 8, 4: 9, 5: 8, 6: 9, 7: 7, 8: 2}
-
 		with torch.no_grad():
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader2)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.testloader[1])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				outputs = self.uninet(inputs)
 				# mapped_targets = functions.replace_numbers(targets,mapping,self.device)

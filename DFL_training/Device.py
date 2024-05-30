@@ -32,6 +32,7 @@ class Client(Wireless):
 		self.uninet = functions.get_model('Unit', self.model_name, configurations.model_len-1, self.device, configurations.model_cfg)
 
 		logger.info('Connecting to Edge.')
+		self.trainloaders = {}
 		self.sock.connect((server_addr,server_port))
 
 	def initialize(self, split_layer, offload, round, first, LR):
@@ -46,19 +47,29 @@ class Client(Wireless):
 		self.optimizer = optim.SGD(self.net.parameters(), lr=LR,
 					  momentum=0.9)
 		logger.debug('Weights..')
-
-		# here!! I have to load the same weights from the old model unless otherwise
+		
 		weights = self.recv_msg(self.sock)[1]
 		if self.split_layer == (configurations.model_len -1):
 			if round >= 0 and round < 3:
-				timer = 1
-				####################### start here !!!
+				pass
 			else:
 				self.net.load_state_dict(weights)
 		else:
 			pweights = functions.split_weights_client(weights,self.net.state_dict())
 			self.net.load_state_dict(pweights)
 		logger.debug('Initialize Finished')
+
+
+		configurations.N_phi = 1000 * len(configurations.selected_classes2)
+
+		for i in range(len(configurations.CLIENTS_LIST)):
+				client_ip = configurations.CLIENTS_LIST[i]
+
+				if i == 0 or i ==2:
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, 1000,True)
+				else:
+					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, 1000,True)
+		
 
 	def power_monitor_thread(self, stop):
 		power = 0
@@ -83,7 +94,7 @@ class Client(Wireless):
 
 		return
  
-	def train(self, trainloader, hostname):
+	def train(self, trainloader, ip_address):
 		# Network speed test
 		network_time_start = time.time()
 		msg = ['MSG_TEST_NETWORK', self.uninet.cpu().state_dict()]
@@ -100,10 +111,6 @@ class Client(Wireless):
 		self.send_msg(self.sock, msg)
 
 
-		# print(hostname[0:3])
-		# if hostname[0:4] == 'nano':
-		# 	# print('this is a nano')
-		# 	stop_threads = False
 		# 	t1 = Thread(target=self.power_monitor_thread, args =(lambda : stop_threads,))
 		# 	t1.start()
    
@@ -115,28 +122,20 @@ class Client(Wireless):
 		time_tota_temp = 0
 
 		iteration_count = 0
-		nice_flag = False
-		other_flag = True
 
-		mapping = {0: 0, 1: 1, 2: 6} # temp!!! mapping at some level
 		if self.split_layer == (configurations.model_len -1): # Classic local training
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader[ip_address])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
-				mapped_targets = functions.replace_numbers(targets,mapping,self.device)
-				loss = self.criterion(outputs, mapped_targets)
-				if other_flag:
-					other_flag = False
-					print(targets)
-					print(mapped_targets)
+				loss = self.criterion(outputs, targets)
+			
 				loss.backward()
 				self.optimizer.step()
 				iteration_count+=1
 			
 		else: # Split learning
-			# print(enumerate(tqdm.tqdm(trainloader)).size)
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader)):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader[ip_address])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
@@ -144,20 +143,10 @@ class Client(Wireless):
 				msg = ['MSG_INTERMEDIATE_ACTIVATIONS_CLIENT_TO_SERVER', outputs.cpu(), targets.cpu()]
 				
 				self.send_msg(self.sock, msg)
-				# print(e_time_tota_temp - s_time_tota_temp)
-
-				# logger.info('waiting to receive gradients')
-
-				# Wait receiving server gradients
+				
 				# s_time_tota_temp = time.time()
 				gradients = self.recv_msg(self.sock)[1].to(self.device)
 				# time_tota_temp += time.time() - s_time_tota_temp
-				
-				# temp stuff
-				if nice_flag:
-					print(outputs.shape)
-					print(gradients.shape)
-					nice_flag = False
 
 				outputs.backward(gradients)
 				self.optimizer.step()

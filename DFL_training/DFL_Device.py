@@ -120,7 +120,7 @@ def training_thread(LR):
 		logger.info('ROUND: {} START'.format(r))
 
 		#training time per round
-		training_time,training_time_pr, network_speed, average_time = client.train(trainloader, hostname)
+		training_time,training_time_pr, network_speed, average_time = client.train(trainloader, ip_address)
 
 		if split:
 			filename =''+ hostname+'-'+str(configurations.split_layer[index])+'_config_fdl.csv'

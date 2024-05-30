@@ -501,7 +501,7 @@ def create_custom_mnist_dataloader(selected_classes, samples_per_class, train=Tr
     ])
 
     # Download the MNIST dataset and apply transformations
-    train_dataset = torchvision.datasets.MNIST(root='./data', train=train,
+    train_dataset = torchvision.datasets.MNIST(root=dataset_path, train=train,
                                                download=True, transform=transform)
 
     # Initialize lists to store selected data and labels

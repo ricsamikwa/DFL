@@ -442,7 +442,7 @@ class DFL_unit(Wireless):
 
 		
 		acc = (acc1 + acc2)/2
-		logger.info('Test Accuracy (No Groups): {}'.format(acc))
+		logger.info('Test Accuracy (Avg): {}'.format(acc))
 
 
 		return acc1, acc2

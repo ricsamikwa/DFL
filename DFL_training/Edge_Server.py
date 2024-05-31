@@ -103,9 +103,8 @@ class Edge_Server(Wireless):
 			self.criterion = nn.CrossEntropyLoss()
 
 		
-			
-		for i in self.client_socks:
-			if round < 3:
+		if round < 3:
+			for i in self.client_socks:
 				# msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.w_local_list[i].state_dict()]
 				msg = ['MSG_INITIAL_GLOBAL_WEIGHTS_SERVER_TO_CLIENT', self.uninet.state_dict()]
 				self.send_msg(self.client_socks[i], msg)

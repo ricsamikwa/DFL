@@ -35,6 +35,16 @@ class Client(Wireless):
 		self.trainloaders = {}
 		self.sock.connect((server_addr,server_port))
 
+		configurations.N_phi = 1000 * len(configurations.selected_classes2)
+
+		for i in range(len(configurations.CLIENTS_LIST)):
+			client_ip = configurations.CLIENTS_LIST[i]
+
+			if i == 0 or i ==2:
+				self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, 1000,True)
+			else:
+				self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, 1000,True)
+
 	def initialize(self, split_layer, offload, round, first, LR):
 		if offload or first:
 			self.split_layer = split_layer
@@ -59,16 +69,6 @@ class Client(Wireless):
 			self.net.load_state_dict(pweights)
 		logger.debug('Initialize Finished')
 
-
-		configurations.N_phi = 1000 * len(configurations.selected_classes2)
-
-		for i in range(len(configurations.CLIENTS_LIST)):
-				client_ip = configurations.CLIENTS_LIST[i]
-
-				if i == 0 or i ==2:
-					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes1, 1000,True)
-				else:
-					self.trainloaders[client_ip] = functions.create_custom_cifar10_dataloader(configurations.selected_classes2, 1000,True)
 		
 
 	def power_monitor_thread(self, stop):

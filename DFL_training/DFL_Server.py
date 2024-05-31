@@ -75,7 +75,7 @@ for r in range(configurations.R):
 
 
 	if split:
-		split_layers = Edge_Server.adaptive_split(bandwidth)
+		split_layers = Edge_Server.adaptive_split(bandwidth, r)
 		splitlist = ''.join(str(e) for e in split_layers)
 		filename = 'DFL_split_'+splitlist+'_config_fdl.csv'
 	else:

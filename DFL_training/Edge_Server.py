@@ -71,7 +71,7 @@ class Edge_Server(Wireless):
 
 		self.testloaders[1] = custom_dataloader
 
-		configurations.N_phi = samples_per_class * len(configurations.selected_classes2)
+		configurations.N_phi = 1000 * len(configurations.selected_classes2)
 
 		for i in range(len(configurations.CLIENTS_LIST)):
 				client_ip = configurations.CLIENTS_LIST[i]
@@ -194,7 +194,7 @@ class Edge_Server(Wireless):
 
 	def _thread_training_offloading(self, client_ip):
 		# iteration = int((config.N / (config.K * config.B)))
-		iteration = 150 
+		iteration = 79 
 
 		for i in range(iteration):
 			msg = self.recv_msg(self.client_socks[client_ip], 'MSG_INTERMEDIATE_ACTIVATIONS_CLIENT_TO_SERVER')
@@ -306,11 +306,8 @@ class Edge_Server(Wireless):
 			self.w_local_list = w_local_list
 
 			return w_local_list
-
 		
-
-		
-		aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
+		# aggregrated_model = functions.fed_avg(zero_model, w_local_list, configurations.N)
 
 		aggregrated_model1 = functions.fed_avg(zero_model1, w_local_list[::len(w_local_list)-1], configurations.N_phi*len(w_local_list[::len(w_local_list)-1]))
 		aggregrated_model2 = functions.fed_avg(zero_model2, w_local_list[len(w_local_list)-2:len(w_local_list)-1], configurations.N_phi*len(w_local_list[len(w_local_list)-2:len(w_local_list)-1]))
@@ -441,13 +438,14 @@ class Edge_Server(Wireless):
 		return acc1, acc2
 	
 	# The function to change more
-	def adaptive_split(self, bandwidth):
+	def adaptive_split(self, bandwidth, round):
 		
-		logger.info('Preparing Device')
-		benchClient = BenchClient(1, '192.168.1.100', 50000, 'VGG', 6)
+		if round == 1:
+			logger.info('Preparing Device')
+			benchClient = BenchClient(1, '192.168.1.100', 50000, 'VGG', 6)
 
-		offloading_strategy = benchClient.ARES_optimiser(0.6, bandwidth[configurations.CLIENTS_LIST[0]]) + 1
-		print("Current Strategy: "+ str(offloading_strategy))
+			offloading_strategy = benchClient.ARES_optimiser(0.6, bandwidth[configurations.CLIENTS_LIST[0]]) + 1
+			print("Current Strategy: "+ str(offloading_strategy))
 		# strategy configuration - refactoring
 		configurations.split_layer = [3,5,4]
 		logger.info('Next Round : ' + str(configurations.split_layer))

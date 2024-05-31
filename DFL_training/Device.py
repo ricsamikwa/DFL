@@ -157,7 +157,7 @@ class Client(Wireless):
 
 		iteration = int((configurations.N / (configurations.K * configurations.B)))
 		# this is a critical
-		iteration = 50 # verify this number 50000/(5*100) = 100, but we have 50 iterations from the data ?
+		# iteration = 50 # verify this number 50000/(5*100) = 100, but we have 50 iterations from the data ?
 		logger.info(str(iteration_count) + ' iterations!!')
 
 

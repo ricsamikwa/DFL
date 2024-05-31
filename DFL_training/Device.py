@@ -94,7 +94,7 @@ class Client(Wireless):
 
 		return
  
-	def train(self, trainloader, ip_address):
+	def train(self, ip_address):
 		# Network speed test
 		network_time_start = time.time()
 		msg = ['MSG_TEST_NETWORK', self.uninet.cpu().state_dict()]
@@ -124,7 +124,7 @@ class Client(Wireless):
 		iteration_count = 0
 
 		if self.split_layer == (configurations.model_len -1): # Classic local training
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader[ip_address])):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.trainloaders[ip_address])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
@@ -135,7 +135,7 @@ class Client(Wireless):
 				iteration_count+=1
 			
 		else: # Split learning
-			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(trainloader[ip_address])):
+			for batch_idx, (inputs, targets) in enumerate(tqdm.tqdm(self.trainloaders[ip_address])):
 				inputs, targets = inputs.to(self.device), targets.to(self.device)
 				self.optimizer.zero_grad()
 				outputs = self.net(inputs)
